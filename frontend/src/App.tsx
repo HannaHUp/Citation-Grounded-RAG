@@ -92,6 +92,9 @@ export default function App() {
             analyzeError={analyzeError}
             onAnalyze={handleAnalyze}
             onFindingClick={handleFindingClick}
+            detectedDocType={detectedDocType}
+            selectedProfileId={selectedProfileId}
+            onSelectProfile={setSelectedProfileId}
           />
         </section>
       </main>

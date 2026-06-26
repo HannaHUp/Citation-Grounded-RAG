@@ -15,6 +15,9 @@ interface Props {
   analyzeError: string | null;
   onAnalyze: () => void;
   onFindingClick: (f: VerifiedFinding) => void;
+  detectedDocType: "contract" | "complaint" | null;
+  selectedProfileId: string;
+  onSelectProfile: (id: string) => void;
 }
 
 export default function FindingsPanel({
@@ -25,6 +28,9 @@ export default function FindingsPanel({
   analyzeError,
   onAnalyze,
   onFindingClick,
+  detectedDocType,
+  selectedProfileId,
+  onSelectProfile,
 }: Props) {
   const sorted = [...findings].sort(
     (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
@@ -44,6 +50,27 @@ export default function FindingsPanel({
           </button>
         )}
       </div>
+      {detectedDocType !== null && (
+        <div className="doc-type-control">
+          <span className="doc-type-control__label">
+            Detected: <strong>{detectedDocType === "contract" ? "Contract" : "Complaint"}</strong>
+          </span>
+          <div className="doc-type-control__buttons">
+            <button
+              type="button"
+              className={`doc-type-btn${selectedProfileId === "contract_risk" ? " doc-type-btn--active" : ""}`}
+              aria-pressed={selectedProfileId === "contract_risk"}
+              onClick={() => onSelectProfile("contract_risk")}
+            >Contract</button>
+            <button
+              type="button"
+              className={`doc-type-btn${selectedProfileId === "complaint_claims" ? " doc-type-btn--active" : ""}`}
+              aria-pressed={selectedProfileId === "complaint_claims"}
+              onClick={() => onSelectProfile("complaint_claims")}
+            >Complaint</button>
+          </div>
+        </div>
+      )}
 
       {findings.length > 0 && (
         <div className="findings-legend">
@@ -52,7 +79,11 @@ export default function FindingsPanel({
             <span className="severity-tag severity-tag--high">HIGH</span>
             <span className="severity-tag severity-tag--medium">MEDIUM</span>
             <span className="severity-tag severity-tag--low">LOW</span>
-            <span className="findings-legend__hint">how serious the legal exposure is</span>
+            <span className="findings-legend__hint">
+              {selectedProfileId === "complaint_claims"
+                ? "strength of the legal claim"
+                : "how serious the legal exposure is"}
+            </span>
           </div>
           <div className="findings-legend__row">
             <span className="findings-legend__label">Grounding:</span>
