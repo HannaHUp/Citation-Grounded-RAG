@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { uploadFile, analyze } from "./api";
-import type { VerifiedFinding } from "./types";
+import { uploadFile, analyze, getAuthorities } from "./api";
+import type { LegalAuthority, VerifiedFinding } from "./types";
 import DocViewer from "./components/DocViewer";
 import FindingsPanel from "./components/FindingsPanel";
 import UploadZone from "./components/UploadZone";
@@ -16,6 +16,7 @@ export default function App() {
   const [detectedDocType, setDetectedDocType] = useState<"contract" | "complaint" | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string>("contract_risk");
   const [findings, setFindings] = useState<VerifiedFinding[]>([]);
+  const [authorities, setAuthorities] = useState<LegalAuthority[]>([]);
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   const [activeFinding, setActiveFinding] = useState<VerifiedFinding | null>(null);
 
@@ -23,6 +24,7 @@ export default function App() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [loadingAuthoritiesFor, setLoadingAuthoritiesFor] = useState<string | null>(null);
 
   async function handleUpload(file: File) {
     setUploading(true);
@@ -35,6 +37,7 @@ export default function App() {
       setDetectedDocType(res.detected_doc_type);
       setSelectedProfileId(res.profile_id);
       setFindings([]);
+      setAuthorities([]);
       setHighlight(null);
       setActiveFinding(null);
       setAnalyzeError(null);
@@ -52,8 +55,15 @@ export default function App() {
     setHighlight(null);
     setActiveFinding(null);
     try {
-      const res = await analyze(docId, selectedProfileId);
-      setFindings(res.findings);
+      if (selectedProfileId === "contract_antitrust") {
+        const res = await getAuthorities(docId, selectedProfileId);
+        setAuthorities(res.authorities);
+        setFindings([]);
+      } else {
+        const res = await analyze(docId, selectedProfileId);
+        setFindings(res.findings);
+        setAuthorities([]);
+      }
     } catch (err) {
       setAnalyzeError(parseAnalyzeError(err));
     } finally {
@@ -65,6 +75,21 @@ export default function App() {
     if (f.verified && f.abs_start != null && f.abs_end != null) {
       setHighlight({ start: f.abs_start, end: f.abs_end });
       setActiveFinding(f);
+    }
+  }
+
+  async function handleAuthorityLookup(finding: VerifiedFinding) {
+    if (!docId) return;
+    setLoadingAuthoritiesFor(finding.source_chunk_id);
+    setAnalyzeError(null);
+    setActiveFinding(finding);
+    try {
+      const res = await getAuthorities(docId, selectedProfileId, finding);
+      setAuthorities(res.authorities);
+    } catch (err) {
+      setAnalyzeError(parseAnalyzeError(err));
+    } finally {
+      setLoadingAuthoritiesFor(null);
     }
   }
 
@@ -86,12 +111,15 @@ export default function App() {
         <section className="findings-pane">
           <FindingsPanel
             findings={findings}
+            authorities={authorities}
             activeFinding={activeFinding}
             hasDocument={fullText != null}
             analyzing={analyzing}
+            loadingAuthoritiesFor={loadingAuthoritiesFor}
             analyzeError={analyzeError}
             onAnalyze={handleAnalyze}
             onFindingClick={handleFindingClick}
+            onAuthorityLookup={handleAuthorityLookup}
             detectedDocType={detectedDocType}
             selectedProfileId={selectedProfileId}
             onSelectProfile={setSelectedProfileId}

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from backend.models import DocStore
 from backend.profiles import get_profile
+from backend.services.authorities import authority_response, retrieve_authorities
 from backend.services.chunker import chunk_text
 from backend.services.extraction import extract_docx, extract_pdf
 from backend.services.llm_finding import classify_doc_type, run_llm
@@ -70,3 +71,25 @@ async def analyze(req: AnalyzeRequest):
     chunks_by_id = {c.chunk_id: c for c in doc.chunks}
     verified = verify_all(raw, doc.full_text, chunks_by_id)
     return {"findings": [asdict(f) for f in verified]}
+
+
+class AuthoritiesRequest(BaseModel):
+    doc_id: str
+    profile_id: str = "contract_antitrust"
+    finding: str | None = None
+    quote: str | None = None
+    source_chunk_id: str | None = None
+
+
+@app.post("/authorities")
+async def authorities(req: AuthoritiesRequest):
+    doc = doc_store.get(req.doc_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    authorities = retrieve_authorities(
+        doc.full_text,
+        req.profile_id,
+        finding=req.finding,
+        quote=req.quote,
+    )
+    return {"authorities": authority_response(authorities)}

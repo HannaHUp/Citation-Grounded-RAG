@@ -73,7 +73,16 @@ Plans:
   3. Each authority entry shows an AI summary with ✓/⚠ badge (same verify guard as Phase 1, pointed at corpus chunk)
   4. Relevance % is derived from cosine similarity score, not LLM output, and is visible per authority
   5. Tabbed panel separates Cases, Statutes & Regulations, and Secondary sources with real source URLs
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+**Wave 1**
+- [x] 03-01-PLAN.md — Corpus ingestion: checkpointed CourtListener case ingest + seeded statutes/secondary records
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 03-02-PLAN.md — Retrieval + verified summaries: local cosine vector search, grounded authority summaries, finding-specific `/authorities`
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 03-03-PLAN.md — Frontend panel: finding-triggered lookup, required tabs, authority cards, loading/empty/error states
 **UI hint**: yes
 
 ### Phase 4: Vincent-Style Workflow Shell
@@ -96,6 +105,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Grounding Spine | 3/3 | Complete    | 2026-06-26 |
-| 2. Second Profile + Auto-Detect | 2/2 | Complete   | 2026-06-26 |
-| 3. Legal Authorities RAG Panel | 0/TBD | Not started | - |
+| 2. Second Profile + Auto-Detect | 2/2 | Complete    | 2026-06-26 |
+| 3. Legal Authorities RAG Panel | 2/3 | Human verification needed | - |
 | 4. Vincent-Style Workflow Shell | 0/TBD | Not started | - |

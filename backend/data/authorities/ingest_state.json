@@ -1,0 +1,7 @@
+{
+  "courtlistener": {
+    "next_url": "https://www.courtlistener.com/api/rest/v4/search/?q=antitrust%20competition",
+    "completed": false,
+    "records_written": 0
+  }
+}

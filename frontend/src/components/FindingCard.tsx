@@ -6,9 +6,17 @@ interface Props {
   finding: VerifiedFinding;
   isActive: boolean;
   onClick: (f: VerifiedFinding) => void;
+  onAuthorityLookup: (f: VerifiedFinding) => void;
+  loadingAuthorities: boolean;
 }
 
-export default function FindingCard({ finding, isActive, onClick }: Props) {
+export default function FindingCard({
+  finding,
+  isActive,
+  onClick,
+  onAuthorityLookup,
+  loadingAuthorities,
+}: Props) {
   const clickable = finding.verified && finding.abs_start != null;
 
   const classes = [
@@ -33,6 +41,17 @@ export default function FindingCard({ finding, isActive, onClick }: Props) {
       )}
       <div className="finding-card__footer">
         <VerifiedBadge verified={finding.verified} />
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={(event) => {
+            event.stopPropagation();
+            onAuthorityLookup(finding);
+          }}
+          disabled={loadingAuthorities}
+        >
+          {loadingAuthorities ? "Finding authorities..." : "Find authorities"}
+        </button>
       </div>
     </div>
   );

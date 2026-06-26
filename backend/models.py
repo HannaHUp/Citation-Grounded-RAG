@@ -38,6 +38,28 @@ class AnalysisProfile:
     tool_description: str
     output_schema: dict
 
+@dataclass
+class LegalAuthority:
+    authority_id: str
+    title: str
+    source_type: str  # "case" | "statute" | "secondary"
+    summary: str
+    relevance: int
+    quote: str
+    url: str
+    source_text: str
+
+@dataclass
+class AuthorityRecord:
+    authority_id: str
+    title: str
+    source_type: str  # "case" | "statute" | "secondary"
+    summary_seed: str
+    quote_seed: str
+    url: str
+    source_text: str
+    metadata: dict
+
 FINDINGS_SCHEMA = {
     "type": "object",
     "properties": {

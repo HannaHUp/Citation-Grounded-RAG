@@ -176,6 +176,24 @@ mark {
   cursor: not-allowed;
 }
 
+.btn-secondary {
+  align-self: flex-start;
+  background: var(--color-bg);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ── Finding Card ────────────────────────────── */
 .finding-card {
   background: var(--color-bg);
@@ -217,6 +235,120 @@ mark {
   align-items: flex-start;
   gap: var(--space-sm);
   flex-direction: column;
+}
+
+/* ── Legal Authorities ─────────────────────── */
+.authorities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.authority-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.authority-tab {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 4px;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.authority-tab--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.authority-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.authority-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.authority-card__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.authority-source,
+.authority-relevance {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 2px var(--space-xs);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.authority-source--case {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.authority-source--statute {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.authority-source--secondary {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.authority-relevance {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.authority-card__title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.authority-card__summary {
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+
+.authority-card__quote {
+  border-left: 3px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.5;
+  padding-left: var(--space-sm);
+}
+
+.authority-card__link {
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 /* ── Severity Tag ───────────────────────────── */

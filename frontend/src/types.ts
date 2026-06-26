@@ -19,3 +19,18 @@ export interface UploadResponse {
 export interface AnalyzeResponse {
   findings: VerifiedFinding[];
 }
+
+export interface LegalAuthority {
+  authority_id: string;
+  title: string;
+  source_type: "case" | "statute" | "secondary";
+  summary: string;
+  relevance: number;
+  quote: string;
+  verified: boolean;
+  url: string;
+}
+
+export interface AuthoritiesResponse {
+  authorities: LegalAuthority[];
+}
