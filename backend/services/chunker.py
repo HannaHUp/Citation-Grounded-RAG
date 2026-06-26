@@ -25,9 +25,9 @@ def chunk_text(doc_id: str, full_text: str, max_chars: int = 2000) -> list[Chunk
             start_offset=i,
             end_offset=end,
         )
-        assert chunk.text == full_text[chunk.start_offset:chunk.end_offset], (
-            f"Offset invariant violated at chunk {chunk.chunk_id}"
-        )
+        # D-01 invariant — explicit raise, not bare assert, so it survives `python -O`.
+        if chunk.text != full_text[chunk.start_offset:chunk.end_offset]:
+            raise ValueError(f"Offset invariant violated at chunk {chunk.chunk_id}")
         chunks.append(chunk)
         i = end
         idx += 1

@@ -28,6 +28,8 @@ MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No filename provided")
     ext = Path(file.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
@@ -63,6 +65,6 @@ async def analyze(req: AnalyzeRequest):
         raise HTTPException(status_code=404, detail="Document not found")
     profile = get_profile(req.profile_id)
     raw = run_llm(doc.chunks, profile, doc.full_text)
-    known_ids = {c.chunk_id for c in doc.chunks}
-    verified = verify_all(raw, doc.full_text, known_ids)
+    chunks_by_id = {c.chunk_id: c for c in doc.chunks}
+    verified = verify_all(raw, doc.full_text, chunks_by_id)
     return {"findings": [asdict(f) for f in verified]}
