@@ -1,10 +1,12 @@
 from fastapi import HTTPException
 
 from backend.profiles.contract_risk import CONTRACT_RISK
+from backend.profiles.complaint_claims import COMPLAINT_CLAIMS
 
 # Registry: add a new profile by importing it and adding one entry here (D-15 / ENGINE-04)
 PROFILES = {
     CONTRACT_RISK.profile_id: CONTRACT_RISK,
+    COMPLAINT_CLAIMS.profile_id: COMPLAINT_CLAIMS,
 }
 
 

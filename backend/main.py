@@ -10,7 +10,7 @@ from backend.models import DocStore
 from backend.profiles import get_profile
 from backend.services.chunker import chunk_text
 from backend.services.extraction import extract_docx, extract_pdf
-from backend.services.llm_finding import run_llm
+from backend.services.llm_finding import classify_doc_type, run_llm
 from backend.services.verifier import verify_all
 from backend.store import doc_store
 
@@ -49,7 +49,9 @@ async def upload(file: UploadFile = File(...)):
     full_text = extract_pdf(content) if ext == ".pdf" else extract_docx(content)
     chunks = chunk_text(doc_id, full_text)
     doc_store[doc_id] = DocStore(doc_id=doc_id, full_text=full_text, chunks=chunks)
-    return {"doc_id": doc_id, "full_text": full_text}
+    profile_id = classify_doc_type(full_text[:3000])
+    detected_doc_type = "complaint" if profile_id == "complaint_claims" else "contract"
+    return {"doc_id": doc_id, "full_text": full_text, "detected_doc_type": detected_doc_type, "profile_id": profile_id}
 
 
 class AnalyzeRequest(BaseModel):
