@@ -1,6 +1,9 @@
+import os
+
 import anthropic
 
 from backend.models import AnalysisProfile, Chunk, RawFinding
+from backend.services import stub_findings
 
 
 def _get_client():
@@ -16,6 +19,13 @@ def run_llm(chunks: list, profile: AnalysisProfile, full_text: str) -> list:
     # ponytail: one call with all chunk texts concatenated; per-chunk loop is the upgrade path
     #           when a fixture exceeds ~40k tokens (Pitfall 6)
     """
+    # ponytail: offline demo path — GROUNDING_STUB=1 returns canned findings so the
+    # full UI demo runs without a direct Anthropic key. The verify guard still runs
+    # FOR REAL against the document, so ✓/⚠ badges are earned, not faked. Remove once
+    # a real sk-ant- key (or Bedrock client) is wired. The live path below is unchanged.
+    if os.environ.get("GROUNDING_STUB") == "1":
+        return stub_findings.findings_for(full_text, chunks)
+
     client = _get_client()
 
     # Build prompt: chunk_id + text only (never offsets — D-02)

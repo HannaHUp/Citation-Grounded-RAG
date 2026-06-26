@@ -116,6 +116,35 @@ mark {
   z-index: 1;
 }
 
+.findings-legend {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.findings-legend__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.findings-legend__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  min-width: 92px;
+}
+
+.findings-legend__hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-right: var(--space-sm);
+}
+
 .findings-list {
   padding: var(--space-sm);
   display: flex;

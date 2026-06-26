@@ -1,6 +1,6 @@
 import type { UploadResponse, AnalyzeResponse } from "./types";
 
-const BASE = "http://localhost:8000";
+const BASE = "http://localhost:8010";
 
 export async function uploadFile(file: File): Promise<UploadResponse> {
   const form = new FormData();

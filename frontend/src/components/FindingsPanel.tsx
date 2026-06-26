@@ -31,6 +31,8 @@ export default function FindingsPanel({
   );
 
   const buttonLabel = findings.length > 0 ? "Re-analyze" : "Analyze Document";
+  const verifiedCount = findings.filter((f) => f.verified).length;
+  const unverifiedCount = findings.length - verifiedCount;
 
   return (
     <>
@@ -42,6 +44,25 @@ export default function FindingsPanel({
           </button>
         )}
       </div>
+
+      {findings.length > 0 && (
+        <div className="findings-legend">
+          <div className="findings-legend__row">
+            <span className="findings-legend__label">Risk severity:</span>
+            <span className="severity-tag severity-tag--high">HIGH</span>
+            <span className="severity-tag severity-tag--medium">MEDIUM</span>
+            <span className="severity-tag severity-tag--low">LOW</span>
+            <span className="findings-legend__hint">how serious the legal exposure is</span>
+          </div>
+          <div className="findings-legend__row">
+            <span className="findings-legend__label">Grounding:</span>
+            <span className="badge badge--verified">✓ Verified</span>
+            <span className="findings-legend__hint">quote matched in source ({verifiedCount})</span>
+            <span className="badge badge--unverified">⚠ Unverified</span>
+            <span className="findings-legend__hint">could not confirm ({unverifiedCount})</span>
+          </div>
+        </div>
+      )}
 
       <div className="findings-list">
         {analyzeError && <p className="error-msg">{analyzeError}</p>}
