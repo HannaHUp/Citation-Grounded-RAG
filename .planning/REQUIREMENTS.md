@@ -36,7 +36,7 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 - [x] **PROF-01**: A second analysis profile (litigation complaint → claims) runs on the identical pipeline with zero engine edits
 - [x] **PROF-02**: On upload, a doc-type classify call detects contract vs complaint and shows the relevant profile cards
-- [ ] **PROF-03**: The detected doc type is displayed with a manual override affordance
+- [x] **PROF-03**: The detected doc type is displayed with a manual override affordance
 
 ### Legal Authorities RAG (Surface B)
 
@@ -104,7 +104,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UIA-03 | Phase 1 | Complete |
 | PROF-01 | Phase 2 | Complete |
 | PROF-02 | Phase 2 | Complete |
-| PROF-03 | Phase 2 | Pending |
+| PROF-03 | Phase 2 | Complete |
 | RAG-01 | Phase 3 | Pending |
 | RAG-02 | Phase 3 | Pending |
 | RAG-03 | Phase 3 | Pending |

@@ -15,7 +15,7 @@ so building it earlier would be scaffolding around empty rooms.
 ## Phases
 
 - [x] **Phase 1: Grounding Spine** - Upload → findings → click-to-highlight with ✓/⚠ badges (Surface A, end-to-end) (completed 2026-06-26)
-- [ ] **Phase 2: Second Profile + Auto-Detect** - Complaint profile + doc-type classify proves one-engine-many-profiles
+- [x] **Phase 2: Second Profile + Auto-Detect** - Complaint profile + doc-type classify proves one-engine-many-profiles (completed 2026-06-26)
 - [ ] **Phase 3: Legal Authorities RAG Panel** - Surface B: real corpus retrieval, grounded summaries, tabbed panel
 - [ ] **Phase 4: Vincent-Style Workflow Shell** - Landing/workflow picker → task picker + who-you-represent → polished two-pane output + page citations
 
@@ -59,7 +59,7 @@ Plans:
 - [x] 02-01-PLAN.md — Backend slice: complaint profile (new file + 1 registry line) + classify_doc_type forced tool-call + /upload returns detected type (PROF-01, PROF-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 02-02-PLAN.md — Frontend slice: detected-type label + 2-button override + analyze() passes selected profile_id + profile-aware legend (PROF-02, PROF-03)
+- [x] 02-02-PLAN.md — Frontend slice: detected-type label + 2-button override + analyze() passes selected profile_id + profile-aware legend (PROF-02, PROF-03)
 **UI hint**: yes
 
 ### Phase 3: Legal Authorities RAG Panel
@@ -96,6 +96,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Grounding Spine | 3/3 | Complete    | 2026-06-26 |
-| 2. Second Profile + Auto-Detect | 1/2 | In Progress|  |
+| 2. Second Profile + Auto-Detect | 2/2 | Complete   | 2026-06-26 |
 | 3. Legal Authorities RAG Panel | 0/TBD | Not started | - |
 | 4. Vincent-Style Workflow Shell | 0/TBD | Not started | - |
