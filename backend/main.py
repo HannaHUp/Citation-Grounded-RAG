@@ -1,12 +1,17 @@
 import uuid
+from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from backend.models import DocStore
+from backend.profiles import get_profile
 from backend.services.chunker import chunk_text
 from backend.services.extraction import extract_docx, extract_pdf
+from backend.services.llm_finding import run_llm
+from backend.services.verifier import verify_all
 from backend.store import doc_store
 
 app = FastAPI()
@@ -43,3 +48,21 @@ async def upload(file: UploadFile = File(...)):
     chunks = chunk_text(doc_id, full_text)
     doc_store[doc_id] = DocStore(doc_id=doc_id, full_text=full_text, chunks=chunks)
     return {"doc_id": doc_id, "full_text": full_text}
+
+
+class AnalyzeRequest(BaseModel):
+    doc_id: str
+    profile_id: str = "contract_risk"
+    # No `verified` field — client can never assert verified-ness (VERIFY-02, T-02-01)
+
+
+@app.post("/analyze")
+async def analyze(req: AnalyzeRequest):
+    doc = doc_store.get(req.doc_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    profile = get_profile(req.profile_id)
+    raw = run_llm(doc.chunks, profile, doc.full_text)
+    known_ids = {c.chunk_id for c in doc.chunks}
+    verified = verify_all(raw, doc.full_text, known_ids)
+    return {"findings": [asdict(f) for f in verified]}
