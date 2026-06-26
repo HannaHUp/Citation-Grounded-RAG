@@ -12,6 +12,8 @@ export interface VerifiedFinding {
 export interface UploadResponse {
   doc_id: string;
   full_text: string;
+  detected_doc_type: "contract" | "complaint";
+  profile_id: string;
 }
 
 export interface AnalyzeResponse {

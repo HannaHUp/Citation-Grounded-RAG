@@ -13,6 +13,8 @@ interface Highlight {
 export default function App() {
   const [fullText, setFullText] = useState<string | null>(null);
   const [docId, setDocId] = useState<string | null>(null);
+  const [detectedDocType, setDetectedDocType] = useState<"contract" | "complaint" | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string>("contract_risk");
   const [findings, setFindings] = useState<VerifiedFinding[]>([]);
   const [highlight, setHighlight] = useState<Highlight | null>(null);
   const [activeFinding, setActiveFinding] = useState<VerifiedFinding | null>(null);
@@ -25,10 +27,13 @@ export default function App() {
   async function handleUpload(file: File) {
     setUploading(true);
     setUploadError(null);
+    setDetectedDocType(null);
     try {
       const res = await uploadFile(file);
       setDocId(res.doc_id);
       setFullText(res.full_text);
+      setDetectedDocType(res.detected_doc_type);
+      setSelectedProfileId(res.profile_id);
       setFindings([]);
       setHighlight(null);
       setActiveFinding(null);
@@ -47,7 +52,7 @@ export default function App() {
     setHighlight(null);
     setActiveFinding(null);
     try {
-      const res = await analyze(docId);
+      const res = await analyze(docId, selectedProfileId);
       setFindings(res.findings);
     } catch (err) {
       setAnalyzeError(parseAnalyzeError(err));

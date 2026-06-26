@@ -13,11 +13,11 @@ export async function uploadFile(file: File): Promise<UploadResponse> {
   return res.json() as Promise<UploadResponse>;
 }
 
-export async function analyze(docId: string): Promise<AnalyzeResponse> {
+export async function analyze(docId: string, profileId: string): Promise<AnalyzeResponse> {
   const res = await fetch(`${BASE}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ doc_id: docId, profile_id: "contract_risk" }),
+    body: JSON.stringify({ doc_id: docId, profile_id: profileId }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
