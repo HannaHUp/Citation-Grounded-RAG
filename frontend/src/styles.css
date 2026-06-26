@@ -1,0 +1,293 @@
+/* CSS Variables — verbatim from 01-UI-SPEC.md */
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f3f4f6;
+  --color-accent: #2563eb;
+  --color-border: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-badge-verified: #16a34a;
+  --color-badge-unverified: #d97706;
+  --color-severity-high: #dc2626;
+  --color-severity-medium: #d97706;
+  --color-severity-low: #6b7280;
+  --color-mark-bg: #fef08a;
+  --color-mark-border: #ca8a04;
+
+  --font-body: system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── App Shell ────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-md);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Document Pane ───────────────────────────── */
+.doc-pane {
+  width: 50%;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-md);
+  background: var(--color-bg);
+}
+
+.doc-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+mark {
+  background: var(--color-mark-bg);
+  border-left: 2px solid var(--color-mark-border);
+  padding: 0 2px;
+}
+
+/* ── Findings Pane ───────────────────────────── */
+.findings-pane {
+  width: 50%;
+  overflow-y: auto;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.findings-header {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.findings-list {
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.findings-empty {
+  padding: var(--space-lg);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* ── Buttons ────────────────────────────────── */
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Finding Card ────────────────────────────── */
+.finding-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  cursor: default;
+}
+
+.finding-card--verified {
+  cursor: pointer;
+}
+
+.finding-card--active {
+  border-left: 4px solid var(--color-accent);
+}
+
+.finding-card__statement {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.finding-card__quote {
+  font-style: italic;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  border-left: 3px solid var(--color-border);
+  padding-left: var(--space-sm);
+  line-height: 1.5;
+}
+
+.finding-card__footer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  flex-direction: column;
+}
+
+/* ── Severity Tag ───────────────────────────── */
+.severity-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px var(--space-xs);
+}
+
+.severity-tag--high   { background: var(--color-severity-high); }
+.severity-tag--medium { background: var(--color-severity-medium); }
+.severity-tag--low    { background: var(--color-severity-low); }
+
+/* ── Verified Badge ─────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  border-radius: 12px;
+  padding: 2px var(--space-sm);
+}
+
+.badge--verified   { background: var(--color-badge-verified); }
+.badge--unverified { background: var(--color-badge-unverified); }
+
+.badge-explainer {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+}
+
+/* ── Upload Zone ────────────────────────────── */
+.upload-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-border);
+  border-radius: 8px;
+  min-height: 120px;
+  padding: var(--space-lg) var(--space-md);
+  text-align: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.upload-zone--drag-active {
+  border-color: var(--color-accent);
+  background: #eff6ff;
+}
+
+.upload-zone--error {
+  border-color: #dc2626;
+}
+
+.upload-zone__heading {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.upload-zone__body {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.upload-zone__error {
+  font-size: 13px;
+  color: #dc2626;
+}
+
+/* ── Error messages ─────────────────────────── */
+.error-msg {
+  font-size: 13px;
+  color: #dc2626;
+  padding: var(--space-sm) var(--space-md);
+}
+
+/* ── Responsive: stack vertically < 768px ───── */
+@media (max-width: 767px) {
+  body {
+    overflow: auto;
+  }
+  .app-body {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .doc-pane,
+  .findings-pane {
+    width: 100%;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
