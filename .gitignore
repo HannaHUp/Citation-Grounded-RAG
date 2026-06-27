@@ -11,3 +11,6 @@ __pycache__/
 
 # Harness background-shell scratch
 .bg-shell/
+
+# Local MCP server config — machine-specific absolute paths, never commit
+.mcp.json
