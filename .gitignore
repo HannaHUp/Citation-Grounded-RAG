@@ -1,0 +1,13 @@
+.planning/
+.claude/
+.codex/
+.gsd/
+.agents/
+
+# Python bytecode / test cache (regenerated)
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Harness background-shell scratch
+.bg-shell/
