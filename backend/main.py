@@ -10,7 +10,7 @@ from backend.models import DocStore
 from backend.profiles import get_profile
 from backend.services.authorities import authority_response, retrieve_authorities
 from backend.services.chunker import chunk_text
-from backend.services.extraction import extract_docx, extract_pdf
+from backend.services.extraction import extract_docx_document, extract_pdf_document
 from backend.services.llm_finding import classify_doc_type, run_llm
 from backend.services.verifier import verify_all
 from backend.store import doc_store
@@ -47,9 +47,15 @@ async def upload(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File does not appear to be a valid DOCX")
 
     doc_id = str(uuid.uuid4())
-    full_text = extract_pdf(content) if ext == ".pdf" else extract_docx(content)
+    extracted = extract_pdf_document(content) if ext == ".pdf" else extract_docx_document(content)
+    full_text = extracted.full_text
     chunks = chunk_text(doc_id, full_text)
-    doc_store[doc_id] = DocStore(doc_id=doc_id, full_text=full_text, chunks=chunks)
+    doc_store[doc_id] = DocStore(
+        doc_id=doc_id,
+        full_text=full_text,
+        chunks=chunks,
+        page_spans=extracted.page_spans,
+    )
     profile_id = classify_doc_type(full_text[:3000])
     detected_doc_type = "complaint" if profile_id == "complaint_claims" else "contract"
     return {"doc_id": doc_id, "full_text": full_text, "detected_doc_type": detected_doc_type, "profile_id": profile_id}
@@ -69,7 +75,7 @@ async def analyze(req: AnalyzeRequest):
     profile = get_profile(req.profile_id)
     raw = run_llm(doc.chunks, profile, doc.full_text)
     chunks_by_id = {c.chunk_id: c for c in doc.chunks}
-    verified = verify_all(raw, doc.full_text, chunks_by_id)
+    verified = verify_all(raw, doc.full_text, chunks_by_id, page_spans=doc.page_spans)
     return {"findings": [asdict(f) for f in verified]}
 
 

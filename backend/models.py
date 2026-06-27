@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 @dataclass
 class Chunk:
@@ -8,10 +8,22 @@ class Chunk:
     end_offset: int   # exclusive: full_text[start_offset:end_offset] == text
 
 @dataclass
+class PageSpan:
+    page_number: int
+    start_offset: int
+    end_offset: int   # exclusive: full_text[start_offset:end_offset] belongs to page_number
+
+@dataclass
+class ExtractedDocument:
+    full_text: str
+    page_spans: list[PageSpan]
+
+@dataclass
 class DocStore:
     doc_id: str
     full_text: str    # canonical source of truth; never mutated after creation
     chunks: list[Chunk]
+    page_spans: list[PageSpan] = field(default_factory=list)
 
 @dataclass
 class RawFinding:
@@ -29,6 +41,7 @@ class VerifiedFinding:
     verified: bool
     abs_start: int | None   # None when verified=False
     abs_end: int | None     # None when verified=False
+    source_page: int | None = None
 
 @dataclass
 class AnalysisProfile:
