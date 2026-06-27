@@ -108,6 +108,14 @@ export const WORKFLOWS: WorkflowCatalogItem[] = [
   ...DISABLED_WORKFLOWS,
 ];
 
+export const RUNNABLE_TASKS: WorkflowTask[] = ENABLED_WORKFLOWS.flatMap(
+  (workflow) => workflow.tasks,
+);
+
 export function getWorkflow(id: WorkflowId): EnabledWorkflow {
   return ENABLED_WORKFLOWS.find((workflow) => workflow.id === id)!;
+}
+
+export function getTaskByProfileId(profileId: RunnableProfileId): WorkflowTask {
+  return RUNNABLE_TASKS.find((task) => task.profileId === profileId)!;
 }
