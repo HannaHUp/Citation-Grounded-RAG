@@ -1,4 +1,10 @@
-import type { UploadResponse, AnalyzeResponse, AuthoritiesResponse, VerifiedFinding } from "./types";
+import type {
+  UploadResponse,
+  AnalyzeResponse,
+  AuthoritiesResponse,
+  Perspective,
+  VerifiedFinding,
+} from "./types";
 
 const BASE = "http://localhost:8010";
 
@@ -13,11 +19,25 @@ export async function uploadFile(file: File): Promise<UploadResponse> {
   return res.json() as Promise<UploadResponse>;
 }
 
-export async function analyze(docId: string, profileId: string): Promise<AnalyzeResponse> {
+export async function analyze(
+  docId: string,
+  profileId: string,
+  perspective?: Perspective,
+): Promise<AnalyzeResponse> {
+  const body: {
+    doc_id: string;
+    profile_id: string;
+    perspective?: Perspective;
+  } = { doc_id: docId, profile_id: profileId };
+
+  if (perspective !== undefined) {
+    body.perspective = perspective;
+  }
+
   const res = await fetch(`${BASE}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ doc_id: docId, profile_id: profileId }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");

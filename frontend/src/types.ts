@@ -7,7 +7,14 @@ export interface VerifiedFinding {
   verified: boolean;
   abs_start: number | null;
   abs_end: number | null;
+  source_page: number | null;
 }
+
+export type Perspective = "plaintiff" | "defendant" | "neutral";
+
+export type WorkflowId = "complaint" | "contract";
+
+export type WorkflowStep = "workflow" | "upload" | "tasks" | "output";
 
 export interface UploadResponse {
   doc_id: string;
