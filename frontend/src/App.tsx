@@ -44,6 +44,7 @@ export default function App() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [authoritiesError, setAuthoritiesError] = useState<string | null>(null);
   const [loadingAuthoritiesFor, setLoadingAuthoritiesFor] = useState<string | null>(null);
 
   const workflow = workflowId === null ? null : getWorkflow(workflowId);
@@ -86,6 +87,7 @@ export default function App() {
     if (!docId || !workflow) return;
     setAnalyzing(true);
     setAnalyzeError(null);
+    setAuthoritiesError(null);
     setFindings([]);
     setAuthorities([]);
     setHighlight(null);
@@ -98,6 +100,16 @@ export default function App() {
       );
       setFindings(res.findings);
       setStep("output");
+      // auto-select first verified finding (fallback first) so the right
+      // authority pane loads as soon as output opens
+      const initial =
+        res.findings.find((f) => f.verified) ?? res.findings[0] ?? null;
+      if (initial) {
+        if (initial.verified && initial.abs_start != null && initial.abs_end != null) {
+          setHighlight({ start: initial.abs_start, end: initial.abs_end });
+        }
+        void loadAuthorities(initial);
+      }
     } catch (err) {
       setAnalyzeError(parseAnalyzeError(err));
     } finally {
@@ -112,25 +124,28 @@ export default function App() {
     setHighlight(null);
     setActiveFinding(null);
     setAnalyzeError(null);
+    setAuthoritiesError(null);
   }
 
   function handleFindingClick(f: VerifiedFinding) {
     if (f.verified && f.abs_start != null && f.abs_end != null) {
       setHighlight({ start: f.abs_start, end: f.abs_end });
-      setActiveFinding(f);
     }
+    // selecting any finding refreshes the right authority pane for it
+    void loadAuthorities(f);
   }
 
-  async function handleAuthorityLookup(finding: VerifiedFinding) {
+  async function loadAuthorities(finding: VerifiedFinding) {
     if (!docId) return;
     setLoadingAuthoritiesFor(finding.source_chunk_id);
-    setAnalyzeError(null);
+    setAuthoritiesError(null);
     setActiveFinding(finding);
+    setAuthorities([]);
     try {
       const res = await getAuthorities(docId, selectedProfileId, finding);
       setAuthorities(res.authorities);
     } catch (err) {
-      setAnalyzeError(parseAnalyzeError(err));
+      setAuthoritiesError(parseAnalyzeError(err));
     } finally {
       setLoadingAuthoritiesFor(null);
     }
@@ -146,6 +161,7 @@ export default function App() {
     setActiveFinding(null);
     setUploadError(null);
     setAnalyzeError(null);
+    setAuthoritiesError(null);
     setLoadingAuthoritiesFor(null);
   }
 
@@ -230,10 +246,10 @@ export default function App() {
               hasDocument={true}
               analyzing={analyzing}
               loadingAuthoritiesFor={loadingAuthoritiesFor}
-              analyzeError={analyzeError}
+              analyzeError={analyzeError ?? authoritiesError}
               onAnalyze={handleAnalyze}
               onFindingClick={handleFindingClick}
-              onAuthorityLookup={handleAuthorityLookup}
+              onAuthorityLookup={loadAuthorities}
               detectedDocType={null}
               selectedProfileId={selectedProfileId}
               onSelectProfile={(id) => handleProfileSelect(toRunnableProfileId(id))}
