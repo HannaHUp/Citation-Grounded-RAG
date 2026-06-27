@@ -43,6 +43,31 @@ def test_offset_round_trip():
         )
 
 
+def test_pdf_document_page_spans_cover_full_text_contiguously():
+    """Page-aware PDF extraction preserves canonical text and spans every offset."""
+    from backend.services.extraction import extract_pdf, extract_pdf_document
+
+    with open(PDF_PATH, "rb") as f:
+        content = f.read()
+
+    document = extract_pdf_document(content)
+    assert document.full_text == extract_pdf(content)
+    assert len(document.page_spans) > 1
+    assert document.page_spans[0].start_offset == 0
+    assert document.page_spans[-1].end_offset == len(document.full_text)
+
+    page_numbers = [span.page_number for span in document.page_spans]
+    assert page_numbers == sorted(page_numbers)
+
+    for prev, curr in zip(document.page_spans, document.page_spans[1:]):
+        assert prev.end_offset == curr.start_offset
+        assert prev.end_offset > prev.start_offset
+    assert document.page_spans[-1].end_offset > document.page_spans[-1].start_offset
+
+    for expected_text, start, end in KNOWN_SPANS:
+        assert document.full_text[start:end] == expected_text
+
+
 def test_full_text_is_char_join():
     """Extraction must use .chars sorted by (doctop, x0), not page.extract_text()."""
     import pdfplumber
@@ -80,3 +105,22 @@ def test_docx_offset_round_trip():
         f"DOCX offset drift at [{start}:{end}]: "
         f"got {actual!r}, expected {expected_text!r}"
     )
+
+
+def test_docx_document_has_page_one_span_covering_full_text():
+    """DOCX MVP pagination is explicit: one page-1 span covers full_text."""
+    from backend.services.extraction import extract_docx, extract_docx_document
+
+    with open(DOCX_PATH, "rb") as f:
+        content = f.read()
+
+    document = extract_docx_document(content)
+    assert document.full_text == extract_docx(content)
+    assert len(document.page_spans) == 1
+    span = document.page_spans[0]
+    assert span.page_number == 1
+    assert span.start_offset == 0
+    assert span.end_offset == len(document.full_text)
+
+    expected_text, start, end = DOCX_KNOWN_SPAN
+    assert document.full_text[start:end] == expected_text

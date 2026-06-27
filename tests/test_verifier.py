@@ -18,6 +18,14 @@ CHUNKS_BY_ID = {
     "doc:1": Chunk(chunk_id="doc:1", text=FULL_TEXT[29:], start_offset=29, end_offset=len(FULL_TEXT)),
 }
 
+def _page_spans():
+    from backend.models import PageSpan
+
+    return [
+        PageSpan(page_number=1, start_offset=0, end_offset=29),
+        PageSpan(page_number=2, start_offset=29, end_offset=len(FULL_TEXT)),
+    ]
+
 
 def _raw(quote, chunk_id="doc:0"):
     return RawFinding(
@@ -118,3 +126,48 @@ def test_verify_all_preserves_count():
     assert results[0].verified is True
     assert results[1].verified is False
     assert results[2].verified is False
+
+
+def test_page_for_offset_maps_contiguous_page_spans():
+    """Page lookup is deterministic at page boundaries."""
+    from backend.services.verifier import page_for_offset
+
+    page_spans = _page_spans()
+    assert page_for_offset(page_spans, 0) == 1
+    assert page_for_offset(page_spans, 28) == 1
+    assert page_for_offset(page_spans, 29) == 2
+    assert page_for_offset(page_spans, len(FULL_TEXT) - 1) == 2
+    assert page_for_offset(page_spans, len(FULL_TEXT)) is None
+    assert page_for_offset(page_spans, None) is None
+
+
+def test_verify_all_assigns_source_page_after_exact_match():
+    """Verified findings derive source_page from verified abs_start and page_spans."""
+    from backend.services.verifier import verify_all
+
+    raws = [
+        _raw("The party shall", chunk_id="doc:0"),
+        _raw("for all losses.", chunk_id="doc:1"),
+    ]
+
+    results = verify_all(raws, FULL_TEXT, CHUNKS_BY_ID, page_spans=_page_spans())
+
+    assert [result.verified for result in results] == [True, True]
+    assert [result.source_page for result in results] == [1, 2]
+
+
+def test_verify_all_leaves_source_page_null_for_unverified_findings():
+    """Unverified findings stay visible but never receive guessed page numbers."""
+    from backend.services.verifier import verify_all
+
+    results = verify_all(
+        [_raw("this text is not in the document")],
+        FULL_TEXT,
+        CHUNKS_BY_ID,
+        page_spans=_page_spans(),
+    )
+
+    assert len(results) == 1
+    assert results[0].verified is False
+    assert results[0].abs_start is None
+    assert results[0].source_page is None
