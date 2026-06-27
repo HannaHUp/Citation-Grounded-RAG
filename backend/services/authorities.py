@@ -23,8 +23,11 @@ class RetrievedAuthority:
 _PROFILE_TERMS = {
     "contract_antitrust": "acquisition merger competition monopoly antitrust",
     "contract_risk": "contract risk obligation competition merger",
-    "complaint_claims": "claim plaintiff commerce monopoly competition",
+    "complaint_claims": "claim plaintiff defendant fiduciary contract venue jurisdiction nonprofit damages",
 }
+
+FINDING_MIN_SCORE = 0.04
+SOURCE_TYPE_ORDER = ("case", "statute", "secondary")
 
 
 def retrieve_authorities(
@@ -38,18 +41,17 @@ def retrieve_authorities(
     if not records:
         return []
 
-    query = " ".join(
-        part
-        for part in [
-            finding or "",
-            quote or "",
-            document_text,
-            _PROFILE_TERMS.get(profile_id, ""),
-        ]
-        if part
-    )
+    is_finding_lookup = bool(finding or quote)
+    if is_finding_lookup:
+        query_parts = [finding or "", quote or ""]
+    else:
+        query_parts = [document_text, _PROFILE_TERMS.get(profile_id, "")]
+    query = " ".join(part for part in query_parts if part)
     scores = _cosine_scores(query, [_retrieval_text(record) for record in records])
     ranked = sorted(zip(records, scores), key=lambda item: (-item[1], item[0].title))
+    if is_finding_lookup:
+        ranked = [item for item in ranked if item[1] >= FINDING_MIN_SCORE]
+        ranked = _prefer_source_type_coverage(ranked, limit)
 
     return [_to_retrieved(record, score) for record, score in ranked[:limit]]
 
@@ -90,6 +92,31 @@ def _to_retrieved(record: AuthorityRecord, score: float) -> RetrievedAuthority:
 
 def _retrieval_text(record: AuthorityRecord) -> str:
     return " ".join([record.title, record.summary_seed, record.quote_seed, record.source_text])
+
+
+def _prefer_source_type_coverage(
+    ranked: list[tuple[AuthorityRecord, float]],
+    limit: int,
+) -> list[tuple[AuthorityRecord, float]]:
+    selected: list[tuple[AuthorityRecord, float]] = []
+    selected_ids: set[str] = set()
+
+    for source_type in SOURCE_TYPE_ORDER:
+        for record, score in ranked:
+            if record.source_type == source_type and record.authority_id not in selected_ids:
+                selected.append((record, score))
+                selected_ids.add(record.authority_id)
+                break
+
+    for record, score in ranked:
+        if len(selected) >= limit:
+            break
+        if record.authority_id in selected_ids:
+            continue
+        selected.append((record, score))
+        selected_ids.add(record.authority_id)
+
+    return sorted(selected, key=lambda item: (-item[1], item[0].title))
 
 
 def _cosine_scores(query: str, documents: list[str]) -> list[float]:

@@ -78,6 +78,116 @@ def seeded_authority_records() -> list[AuthorityRecord]:
             ),
             metadata={"source": "doj"},
         ),
+        AuthorityRecord(
+            authority_id="cal-corp-5231",
+            title="California Corporations Code Section 5231",
+            source_type="statute",
+            summary_seed=(
+                "Defines director fiduciary duties for California nonprofit public benefit corporations."
+            ),
+            quote_seed=(
+                "A director shall perform the duties of a director, including duties as a member of any committee of the board upon which the director may serve, in good faith"
+            ),
+            url="https://law.justia.com/codes/california/code-corp/title-1/division-2/part-2/chapter-2/article-3/section-5231/",
+            source_text=(
+                "This section describes fiduciary duties owed by directors of "
+                "California nonprofit public benefit corporations. "
+                "A director shall perform the duties of a director, including duties as a "
+                "member of any committee of the board upon which the director may serve, "
+                "in good faith, in a manner such director believes to be in the best "
+                "interests of the corporation and with such care, including reasonable "
+                "inquiry, as an ordinarily prudent person in a like position would use "
+                "under similar circumstances."
+            ),
+            metadata={"source": "justia"},
+        ),
+        AuthorityRecord(
+            authority_id="bancroft-whitney-v-glen",
+            title="Bancroft-Whitney Co. v. Glen",
+            source_type="case",
+            summary_seed=(
+                "California authority recognizing that corporate fiduciaries may not use "
+                "their positions of trust for private advantage."
+            ),
+            quote_seed=(
+                "Corporate officers and directors are not permitted to use their position of trust and confidence to further their private interests"
+            ),
+            url="https://law.justia.com/cases/california/supreme-court/2d/64/327.html",
+            source_text=(
+                "Corporate officers and directors are not permitted to use their position "
+                "of trust and confidence to further their private interests. The fiduciary "
+                "relationship requires loyalty when officers or directors act for the corporation."
+            ),
+            metadata={"source": "justia"},
+        ),
+        AuthorityRecord(
+            authority_id="cal-ag-charities-fiduciary",
+            title="California Attorney General Guide for Charities",
+            source_type="secondary",
+            summary_seed=(
+                "Explains fiduciary duties for directors of California charitable and nonprofit entities."
+            ),
+            quote_seed=(
+                "directors and officers of charities are fiduciaries and must act in the best interests of the charity"
+            ),
+            url="https://oag.ca.gov/charities/publications",
+            source_text=(
+                "The Attorney General's charity guidance explains that directors and officers "
+                "of charities are fiduciaries and must act in the best interests of the charity. "
+                "The guidance discusses duties of care, loyalty, and obedience for nonprofit governance."
+            ),
+            metadata={"source": "california_ag"},
+        ),
+        AuthorityRecord(
+            authority_id="cal-civ-1550",
+            title="California Civil Code Section 1550",
+            source_type="statute",
+            summary_seed="Lists the required elements for the existence of a contract under California law.",
+            quote_seed="It is essential to the existence of a contract that there should be parties capable of contracting, their consent, a lawful object, and a sufficient cause or consideration",
+            url="https://law.justia.com/codes/california/code-civ/division-3/part-2/title-1/chapter-3/section-1550/",
+            source_text=(
+                "It is essential to the existence of a contract that there should be "
+                "parties capable of contracting, their consent, a lawful object, and "
+                "a sufficient cause or consideration."
+            ),
+            metadata={"source": "justia"},
+        ),
+        AuthorityRecord(
+            authority_id="cal-ccp-395",
+            title="California Code of Civil Procedure Section 395",
+            source_type="statute",
+            summary_seed=(
+                "Provides the general California venue rule based on where defendants reside."
+            ),
+            quote_seed=(
+                "the superior court in the county where the defendants or some of them reside at the commencement of the action is the proper court for the trial of the action"
+            ),
+            url="https://law.justia.com/codes/california/code-ccp/part-2/title-4/chapter-1/section-395/",
+            source_text=(
+                "Except as otherwise provided by law and subject to the power of the "
+                "court to transfer actions or proceedings as provided in this title, "
+                "the superior court in the county where the defendants or some of them "
+                "reside at the commencement of the action is the proper court for the "
+                "trial of the action."
+            ),
+            metadata={"source": "justia"},
+        ),
+        AuthorityRecord(
+            authority_id="cal-courts-venue-basics",
+            title="California Courts Self-Help Guide: Venue",
+            source_type="secondary",
+            summary_seed=(
+                "Describes venue as the proper county for filing or hearing a California civil case."
+            ),
+            quote_seed="venue means the county where the court with jurisdiction may hear and determine a case",
+            url="https://selfhelp.courts.ca.gov/",
+            source_text=(
+                "California court self-help materials explain that venue means the county "
+                "where the court with jurisdiction may hear and determine a case. Venue "
+                "rules help decide which county is the proper court for a civil action."
+            ),
+            metadata={"source": "california_courts"},
+        ),
     ]
 
 

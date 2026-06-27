@@ -103,24 +103,33 @@ def classify_doc_type(prefix: str) -> str:
     """Returns profile_id for the detected document type (D-01/D-02/D-03)."""
     # ponytail: stub classify — keyword heuristic, offline only (D-10)
     if os.environ.get("GROUNDING_STUB") == "1":
-        return "complaint_claims" if "plaintiff" in prefix.lower() else "contract_risk"
+        return _classify_doc_type_locally(prefix)
 
     client = _get_client()
-    response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=64,   # enum response only — much cheaper than findings call
-        tools=[{
-            "name": "classify_document",
-            "description": "Classify the document as a commercial contract or a litigation complaint.",
-            "input_schema": _CLASSIFY_SCHEMA,
-        }],
-        tool_choice={"type": "tool", "name": "classify_document"},
-        messages=[{"role": "user", "content": f"Document excerpt:\n\n{prefix}"}],
-        system=(
-            "You are a legal document classifier. "
-            "Return 'contract' for commercial agreements, NDAs, service agreements. "
-            "Return 'complaint' for litigation complaints, lawsuits, pleadings, petitions."
-        ),
-    )
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=64,   # enum response only — much cheaper than findings call
+            tools=[{
+                "name": "classify_document",
+                "description": "Classify the document as a commercial contract or a litigation complaint.",
+                "input_schema": _CLASSIFY_SCHEMA,
+            }],
+            tool_choice={"type": "tool", "name": "classify_document"},
+            messages=[{"role": "user", "content": f"Document excerpt:\n\n{prefix}"}],
+            system=(
+                "You are a legal document classifier. "
+                "Return 'contract' for commercial agreements, NDAs, service agreements. "
+                "Return 'complaint' for litigation complaints, lawsuits, pleadings, petitions."
+            ),
+        )
+    except Exception:
+        return _classify_doc_type_locally(prefix)
     tool_block = next(b for b in response.content if b.type == "tool_use")
     return _DOC_TYPE_TO_PROFILE.get(tool_block.input["doc_type"], "contract_risk")
+
+
+def _classify_doc_type_locally(prefix: str) -> str:
+    text = prefix.lower()
+    complaint_terms = ("plaintiff", "defendant", "complaint", "superior court", "cause of action")
+    return "complaint_claims" if any(term in text for term in complaint_terms) else "contract_risk"

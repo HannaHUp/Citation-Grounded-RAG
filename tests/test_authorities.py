@@ -43,11 +43,7 @@ def test_retrieve_authorities_uses_local_cosine_scores(tmp_path, monkeypatch):
         quote="substantially lessen competition",
     )
 
-    assert [authority.authority_id for authority in results][:2] == [
-        "merger-case",
-        "employment-case",
-    ]
-    assert results[0].raw_score > results[1].raw_score
+    assert [authority.authority_id for authority in results] == ["merger-case"]
     assert results[0].relevance == round(results[0].raw_score * 100)
     assert results[0].quote in results[0].source_text
     assert results[0].verified is True
@@ -148,6 +144,90 @@ def test_authorities_endpoint_accepts_finding_specific_lookup():
 
     assert response.status_code == 200
     assert response.json()["authorities"]
+
+
+def test_seeded_corpus_returns_different_top_authorities_for_different_findings():
+    from backend.services.authorities import retrieve_authorities
+
+    fiduciary_results = retrieve_authorities(
+        document_text="The complaint alleges breach of fiduciary duty and abandonment of nonprofit duties.",
+        profile_id="complaint_claims",
+        finding="The complaint asserts a breach of fiduciary duty claim against directors.",
+        quote="BREACH OF FIDUCIARY",
+    )
+    venue_results = retrieve_authorities(
+        document_text="The complaint alleges venue and jurisdiction in San Francisco.",
+        profile_id="complaint_claims",
+        finding="Jurisdiction and venue rest on the County of San Francisco.",
+        quote="County of San Francisco",
+    )
+
+    assert fiduciary_results
+    assert venue_results
+    assert fiduciary_results[0].authority_id != venue_results[0].authority_id
+
+
+def test_finding_specific_lookup_can_populate_relevant_tabs():
+    from backend.services.authorities import retrieve_authorities
+
+    fiduciary_results = retrieve_authorities(
+        document_text="The complaint alleges breach of fiduciary duty and abandonment of nonprofit duties.",
+        profile_id="complaint_claims",
+        finding="The complaint asserts a breach of fiduciary duty claim against directors.",
+        quote="BREACH OF FIDUCIARY",
+        limit=5,
+    )
+
+    assert {authority.source_type for authority in fiduciary_results} == {
+        "case",
+        "statute",
+        "secondary",
+    }
+    assert {
+        "bancroft-whitney-v-glen",
+        "cal-corp-5231",
+        "cal-ag-charities-fiduciary",
+    } <= {authority.authority_id for authority in fiduciary_results}
+
+
+def test_finding_specific_lookup_does_not_reuse_generic_tab_cards():
+    from backend.services.authorities import retrieve_authorities
+
+    fiduciary_results = retrieve_authorities(
+        document_text="The complaint alleges breach of fiduciary duty and abandonment of nonprofit duties.",
+        profile_id="complaint_claims",
+        finding="The complaint asserts a breach of fiduciary duty claim against directors.",
+        quote="BREACH OF FIDUCIARY",
+        limit=5,
+    )
+    venue_results = retrieve_authorities(
+        document_text="The complaint alleges venue and jurisdiction in San Francisco.",
+        profile_id="complaint_claims",
+        finding="Jurisdiction and venue rest on the County of San Francisco.",
+        quote="County of San Francisco",
+        limit=5,
+    )
+
+    fiduciary_ids = {authority.authority_id for authority in fiduciary_results}
+    venue_ids = {authority.authority_id for authority in venue_results}
+
+    assert {"cal-corp-5231", "cal-ag-charities-fiduciary"} <= fiduciary_ids
+    assert {"cal-ccp-395", "cal-courts-venue-basics"} <= venue_ids
+    assert fiduciary_ids != venue_ids
+
+
+def test_finding_specific_lookup_filters_low_relevance_fillers():
+    from backend.services import authorities as service
+
+    results = service.retrieve_authorities(
+        document_text="The complaint alleges venue and jurisdiction in San Francisco.",
+        profile_id="complaint_claims",
+        finding="Jurisdiction and venue rest on the County of San Francisco.",
+        quote="County of San Francisco",
+    )
+
+    assert results
+    assert all(result.raw_score >= service.FINDING_MIN_SCORE for result in results)
 
 
 def test_authorities_endpoint_404_for_missing_document():
