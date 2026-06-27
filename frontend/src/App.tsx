@@ -13,8 +13,7 @@ import {
   WORKFLOWS,
   type RunnableProfileId,
 } from "./workflows";
-import DocViewer from "./components/DocViewer";
-import FindingsPanel from "./components/FindingsPanel";
+import WorkflowOutput from "./components/WorkflowOutput";
 import TaskPicker from "./components/TaskPicker";
 import WorkflowPicker from "./components/WorkflowPicker";
 import WorkflowUploadStep from "./components/WorkflowUploadStep";
@@ -234,28 +233,17 @@ export default function App() {
             <span>Perspective: <strong>{capitalize(perspective)}</strong></span>
           )}
         </div>
-        <main className="app-body app-body--output">
-          <section className="doc-pane">
-            <DocViewer text={fullText} highlight={highlight} />
-          </section>
-          <section className="findings-pane">
-            <FindingsPanel
-              findings={findings}
-              authorities={authorities}
-              activeFinding={activeFinding}
-              hasDocument={true}
-              analyzing={analyzing}
-              loadingAuthoritiesFor={loadingAuthoritiesFor}
-              analyzeError={analyzeError ?? authoritiesError}
-              onAnalyze={handleAnalyze}
-              onFindingClick={handleFindingClick}
-              onAuthorityLookup={loadAuthorities}
-              detectedDocType={null}
-              selectedProfileId={selectedProfileId}
-              onSelectProfile={(id) => handleProfileSelect(toRunnableProfileId(id))}
-            />
-          </section>
-        </main>
+        {analyzeError && <p className="error-msg">{analyzeError}</p>}
+        <WorkflowOutput
+          fullText={fullText}
+          findings={findings}
+          authorities={authorities}
+          activeFinding={activeFinding}
+          highlight={highlight}
+          loadingAuthorities={loadingAuthoritiesFor !== null}
+          authoritiesError={authoritiesError}
+          onFindingClick={handleFindingClick}
+        />
       </>
     );
   }

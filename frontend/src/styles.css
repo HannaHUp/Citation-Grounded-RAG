@@ -303,6 +303,128 @@ body {
   background: var(--color-bg);
 }
 
+/* ── Workflow Output (Vincent-style two-pane) ── */
+.workflow-output {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workflow-output__left {
+  width: 52%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.workflow-output__right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.workflow-output__pane-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 650;
+  flex-shrink: 0;
+}
+
+.workflow-output__src {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.workflow-output__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  background: #f9fafb;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.workflow-output__legend .badge {
+  padding: 0 6px;
+}
+
+.workflow-output__legend-hint {
+  color: var(--color-text-secondary);
+}
+
+.workflow-output__findings {
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow-y: auto;
+  flex: 1 1 40%;
+  min-height: 120px;
+}
+
+.workflow-output__source {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-border);
+  flex: 1 1 35%;
+  min-height: 120px;
+  overflow: hidden;
+}
+
+.workflow-output__source-title {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.workflow-output__source .doc-text {
+  padding: var(--space-md);
+  overflow-y: auto;
+}
+
+.workflow-output__authorities {
+  padding: var(--space-sm);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.finding-card__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.finding-card__page {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-left: auto;
+}
+
+.finding-card--clickable {
+  cursor: pointer;
+}
+
 /* ── Document Pane ───────────────────────────── */
 .doc-pane {
   width: 50%;
@@ -763,5 +885,21 @@ mark {
     overflow-y: visible;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
+  }
+  .workflow-output {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .workflow-output__left,
+  .workflow-output__right {
+    width: 100%;
+    overflow: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .workflow-output__findings,
+  .workflow-output__authorities,
+  .workflow-output__source .doc-text {
+    overflow-y: visible;
   }
 }

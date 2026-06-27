@@ -6,53 +6,35 @@ interface Props {
   finding: VerifiedFinding;
   isActive: boolean;
   onClick: (f: VerifiedFinding) => void;
-  onAuthorityLookup: (f: VerifiedFinding) => void;
-  loadingAuthorities: boolean;
 }
 
-export default function FindingCard({
-  finding,
-  isActive,
-  onClick,
-  onAuthorityLookup,
-  loadingAuthorities,
-}: Props) {
-  const clickable = finding.verified && finding.abs_start != null;
-
+export default function FindingCard({ finding, isActive, onClick }: Props) {
   const classes = [
     "finding-card",
-    clickable ? "finding-card--verified" : "",
+    "finding-card--clickable",
     isActive ? "finding-card--active" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <div
-      className={classes}
-      onClick={() => {
-        if (clickable) onClick(finding);
-      }}
-    >
-      <SeverityTag severity={finding.severity} />
+    <div className={classes} onClick={() => onClick(finding)}>
+      <div className="finding-card__top">
+        <SeverityTag severity={finding.severity} />
+        {finding.source_page != null && (
+          <span className="finding-card__page">p. {finding.source_page}</span>
+        )}
+        <VerifiedBadge verified={finding.verified} compact />
+      </div>
       <p className="finding-card__statement">{finding.finding}</p>
       {finding.quote && (
         <blockquote className="finding-card__quote">"{finding.quote}"</blockquote>
       )}
-      <div className="finding-card__footer">
-        <VerifiedBadge verified={finding.verified} />
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={(event) => {
-            event.stopPropagation();
-            onAuthorityLookup(finding);
-          }}
-          disabled={loadingAuthorities}
-        >
-          {loadingAuthorities ? "Finding authorities..." : "Find authorities"}
-        </button>
-      </div>
+      {!finding.verified && (
+        <p className="badge-explainer">
+          AI flagged this but the exact source could not be confirmed — verify manually.
+        </p>
+      )}
     </div>
   );
 }
