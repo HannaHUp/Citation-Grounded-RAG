@@ -11,7 +11,12 @@ def _get_client():
     return anthropic.Anthropic()
 
 
-def run_llm(chunks: list, profile: AnalysisProfile, full_text: str) -> list:
+def run_llm(
+    chunks: list[Chunk],
+    profile: AnalysisProfile,
+    full_text: str,
+    perspective: str | None = None,
+) -> list[RawFinding]:
     """Profile-agnostic forced tool-call findings runner (ENGINE-01, ENGINE-04, D-04, D-16).
 
     Sends chunk_id + text only — no start_offset/end_offset in the LLM payload (D-02/ENGINE-02).
@@ -32,7 +37,9 @@ def run_llm(chunks: list, profile: AnalysisProfile, full_text: str) -> list:
     chunk_lines = "\n\n".join(
         f"[{chunk.chunk_id}]\n{chunk.text}" for chunk in chunks
     )
-    user_message = f"Analyze the following contract text:\n\n{chunk_lines}"
+    prompt_intro = f"Analyze the following document text:\n\n{chunk_lines}"
+    context = _perspective_context(perspective)
+    user_message = f"{context}\n\n{prompt_intro}" if context else prompt_intro
 
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",   # D-16
@@ -57,6 +64,25 @@ def run_llm(chunks: list, profile: AnalysisProfile, full_text: str) -> list:
         )
         for f in tool_block.input["findings"]
     ]
+
+
+def _perspective_context(perspective: str | None) -> str:
+    if perspective == "plaintiff":
+        return (
+            "Perspective context: Analyze from the plaintiff's perspective, "
+            "emphasizing claims, supporting allegations, requested relief, and plaintiff-side risks."
+        )
+    if perspective == "defendant":
+        return (
+            "Perspective context: Analyze from the defendant's perspective, "
+            "emphasizing defenses, weaknesses in the claims, exposure, and response strategy."
+        )
+    if perspective == "neutral":
+        return (
+            "Perspective context: Analyze from a neutral, balanced perspective, "
+            "weighing claims and defenses without favoring either side."
+        )
+    return ""
 
 
 _CLASSIFY_SCHEMA = {

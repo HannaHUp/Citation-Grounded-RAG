@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import asdict
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,6 +65,7 @@ async def upload(file: UploadFile = File(...)):
 class AnalyzeRequest(BaseModel):
     doc_id: str
     profile_id: str = "contract_risk"
+    perspective: Literal["plaintiff", "defendant", "neutral"] | None = None
     # No `verified` field — client can never assert verified-ness (VERIFY-02, T-02-01)
 
 
@@ -73,7 +75,7 @@ async def analyze(req: AnalyzeRequest):
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     profile = get_profile(req.profile_id)
-    raw = run_llm(doc.chunks, profile, doc.full_text)
+    raw = run_llm(doc.chunks, profile, doc.full_text, perspective=req.perspective)
     chunks_by_id = {c.chunk_id: c for c in doc.chunks}
     verified = verify_all(raw, doc.full_text, chunks_by_id, page_spans=doc.page_spans)
     return {"findings": [asdict(f) for f in verified]}
