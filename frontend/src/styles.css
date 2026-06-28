@@ -71,6 +71,200 @@ body {
   font-weight: 600;
 }
 
+/* ── Workflow Launcher ─────────────────────── */
+.workflow-launcher {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-bg);
+  padding: var(--space-xl) var(--space-lg) var(--space-2xl);
+}
+
+.workflow-launcher__hero {
+  width: min(640px, 100%);
+  margin: 0 auto var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.workflow-launcher__mark {
+  color: var(--color-accent);
+  font-size: 32px;
+  line-height: 1;
+  transform: rotate(180deg);
+  width: fit-content;
+}
+
+.workflow-launcher__hero h1 {
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+.workflow-command {
+  min-height: 120px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.workflow-command textarea {
+  flex: 1;
+  resize: none;
+  border: 0;
+  outline: none;
+  padding: var(--space-md);
+  font: inherit;
+  color: var(--color-text-primary);
+}
+
+.workflow-command__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.workflow-command__icon,
+.workflow-command__send {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.workflow-command__send {
+  margin-left: auto;
+  color: #fff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.workflow-launcher__workflows {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+}
+
+.workflow-launcher__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.workflow-launcher__toolbar h2 {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.workflow-launcher__filters {
+  display: grid;
+  grid-template-columns: 220px 260px;
+  gap: var(--space-sm);
+}
+
+.workflow-launcher__filters select,
+.workflow-launcher__filters input {
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  padding: 0 var(--space-md);
+  font: inherit;
+}
+
+.workflow-launcher__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.workflow-launcher-card {
+  position: relative;
+  min-height: 128px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  padding: var(--space-md);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.workflow-launcher-card:hover:not(:disabled),
+.workflow-launcher-card:focus-visible {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 1px #93c5fd inset;
+}
+
+.workflow-launcher-card--disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.workflow-launcher-card__pin {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  color: var(--color-accent);
+  font-size: 10px;
+}
+
+.workflow-launcher-card__title {
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.workflow-launcher-card__description {
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+  max-width: 92%;
+}
+
+.workflow-launcher-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: auto;
+}
+
+.contract-entry {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-bg);
+}
+
+.contract-entry__inner {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.contract-entry h1 {
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.contract-entry p {
+  color: var(--color-text-secondary);
+  max-width: 680px;
+}
+
 /* ── Complaint Workflow ─────────────────────── */
 .complaint-entry {
   flex: 1;
@@ -839,6 +1033,24 @@ body {
 
 .workflow-back {
   width: fit-content;
+}
+
+.workflow-back-link {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.workflow-back-link:hover,
+.workflow-back-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
 }
 
 .workflow-step-kicker,

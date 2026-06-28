@@ -26,6 +26,7 @@ class DocStore:
     page_spans: list[PageSpan] = field(default_factory=list)
     document_name: str | None = None
     fixture_id: str | None = None
+    detected_doc_type: str | None = None
 
 @dataclass
 class RawFinding:

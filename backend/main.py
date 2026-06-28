@@ -54,15 +54,16 @@ async def upload(file: UploadFile = File(...)):
     extracted = extract_pdf_document(content) if ext == ".pdf" else extract_docx_document(content)
     full_text = extracted.full_text
     chunks = chunk_text(doc_id, full_text)
+    profile_id = classify_doc_type(full_text[:3000])
+    detected_doc_type = "complaint" if profile_id == "complaint_claims" else "contract"
     doc_store[doc_id] = DocStore(
         doc_id=doc_id,
         full_text=full_text,
         chunks=chunks,
         page_spans=extracted.page_spans,
         document_name=file.filename,
+        detected_doc_type=detected_doc_type,
     )
-    profile_id = classify_doc_type(full_text[:3000])
-    detected_doc_type = "complaint" if profile_id == "complaint_claims" else "contract"
     return {"doc_id": doc_id, "full_text": full_text, "detected_doc_type": detected_doc_type, "profile_id": profile_id}
 
 
@@ -70,6 +71,12 @@ async def upload(file: UploadFile = File(...)):
 async def demo_musk_altman_complaint():
     provider = get_workflow_provider()
     return model_dump(provider.load_demo_complaint())
+
+
+@app.post("/demo/contract/linkedin-merger")
+async def demo_linkedin_merger_contract():
+    provider = get_workflow_provider()
+    return model_dump(provider.load_demo_contract())
 
 
 @app.get("/workflow/{doc_id}")

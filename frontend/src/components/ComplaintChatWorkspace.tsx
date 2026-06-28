@@ -16,6 +16,7 @@ interface Props {
   authoritiesError: string | null;
   onCitationSelect: (citation: ReportCitation) => void;
   onBackToSetup: () => void;
+  onBackToWorkflows: () => void;
   onSendMessage: (message: string) => void;
 }
 
@@ -30,9 +31,11 @@ export default function ComplaintChatWorkspace({
   authoritiesError,
   onCitationSelect,
   onBackToSetup,
+  onBackToWorkflows,
   onSendMessage,
 }: Props) {
   const [verifyingCitation, setVerifyingCitation] = useState<ReportCitation | null>(null);
+  const workflowLabel = workflow.workflow_id === "contract" ? "Analyze a Contract" : "Analyze a Complaint";
 
   function handleCitationSelect(citation: ReportCitation) {
     onCitationSelect(citation);
@@ -43,9 +46,15 @@ export default function ComplaintChatWorkspace({
     <main className="chat-workspace">
       <header className="chat-workspace__header">
         <div>
+          <button type="button" className="workflow-back-link" onClick={onBackToWorkflows}>
+            &larr; {workflowLabel}
+          </button>
           <p className="workflow-step-kicker">Grounded Chat Workspace</p>
           <h1>{workflow.document_name}</h1>
-          <p>{thread.selected_task_ids.length} tasks · {thread.represented_party_ids.length} represented parties</p>
+          <p>
+            {thread.selected_task_ids.length} tasks
+            {thread.represented_party_ids.length > 0 ? ` · ${thread.represented_party_ids.length} represented parties` : ""}
+          </p>
         </div>
         <button className="btn-secondary" type="button" onClick={onBackToSetup}>Back to setup</button>
       </header>

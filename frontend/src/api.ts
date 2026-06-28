@@ -32,6 +32,15 @@ export async function loadDemoComplaint(): Promise<ComplaintWorkflowResponse> {
   return res.json() as Promise<ComplaintWorkflowResponse>;
 }
 
+export async function loadDemoContract(): Promise<ComplaintWorkflowResponse> {
+  const res = await fetch(`${BASE}/demo/contract/linkedin-merger`, { method: "POST" });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Demo load failed (${res.status})`);
+  }
+  return res.json() as Promise<ComplaintWorkflowResponse>;
+}
+
 export async function getWorkflow(docId: string): Promise<ComplaintWorkflowResponse> {
   const res = await fetch(`${BASE}/workflow/${docId}`);
   if (!res.ok) {
@@ -156,6 +165,27 @@ export async function getComplaintAuthorities(
     body: JSON.stringify({
       doc_id: docId,
       profile_id: "complaint_claims",
+      finding,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Authorities failed (${res.status})`);
+  }
+  return res.json() as Promise<AuthoritiesResponse>;
+}
+
+export async function getWorkflowAuthorities(
+  docId: string,
+  workflowId: string,
+  finding?: string,
+): Promise<AuthoritiesResponse> {
+  const res = await fetch(`${BASE}/authorities`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      doc_id: docId,
+      profile_id: workflowId === "contract" ? "contract_antitrust" : "complaint_claims",
       finding,
     }),
   });

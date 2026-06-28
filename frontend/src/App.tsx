@@ -1,8 +1,9 @@
 import { useState } from "react";
 import {
-  getComplaintAuthorities,
   getWorkflow,
+  getWorkflowAuthorities,
   loadDemoComplaint,
+  loadDemoContract,
   sendChatMessage,
   startChat,
   uploadFile,
@@ -10,18 +11,29 @@ import {
 import ComplaintChatWorkspace from "./components/ComplaintChatWorkspace";
 import ComplaintEntry from "./components/ComplaintEntry";
 import ComplaintSetup from "./components/ComplaintSetup";
+import WorkflowLauncher from "./components/WorkflowLauncher";
 import type {
   ChatMessage,
   ChatThread,
   ComplaintWorkflowResponse,
   LegalAuthority,
   ReportCitation,
+  WorkflowId,
 } from "./types";
+import { WORKFLOWS } from "./workflows";
 
-type ComplaintPage = "entry" | "setup" | "workspace";
+type AppPage =
+  | "launcher"
+  | "complaint-entry"
+  | "complaint-setup"
+  | "complaint-workspace"
+  | "contract-entry"
+  | "contract-setup"
+  | "contract-workspace";
 
 export default function App() {
-  const [page, setPage] = useState<ComplaintPage>("entry");
+  const [page, setPage] = useState<AppPage>("launcher");
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<WorkflowId | null>(null);
   const [workflow, setWorkflow] = useState<ComplaintWorkflowResponse | null>(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedPartyIds, setSelectedPartyIds] = useState<string[]>([]);
@@ -36,14 +48,22 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [authoritiesError, setAuthoritiesError] = useState<string | null>(null);
 
+  function handleWorkflowSelect(workflowId: WorkflowId) {
+    clearComplaintState();
+    setSelectedWorkflowId(workflowId);
+    setPage(workflowId === "complaint" ? "complaint-entry" : "contract-entry");
+  }
+
   async function handleUseDemo() {
     setLoadingDocument(true);
     setError(null);
     try {
-      const nextWorkflow = await loadDemoComplaint();
+      const nextWorkflow = selectedWorkflowId === "contract"
+        ? await loadDemoContract()
+        : await loadDemoComplaint();
       applyWorkflow(nextWorkflow);
     } catch (err) {
-      setError(parseError(err, "Demo complaint could not be loaded."));
+      setError(parseError(err, "Demo document could not be loaded."));
     } finally {
       setLoadingDocument(false);
     }
@@ -65,7 +85,8 @@ export default function App() {
 
   function applyWorkflow(nextWorkflow: ComplaintWorkflowResponse) {
     setWorkflow(nextWorkflow);
-    setPage("setup");
+    setSelectedWorkflowId(nextWorkflow.workflow_id === "contract" ? "contract" : "complaint");
+    setPage(nextWorkflow.workflow_id === "contract" ? "contract-setup" : "complaint-setup");
     setSelectedTaskIds(
       nextWorkflow.tasks
         .filter((task) => task.enabled && task.fixture_supported)
@@ -111,12 +132,12 @@ export default function App() {
     try {
       const nextThread = await startChat(workflow.doc_id, selectedTaskIds, selectedPartyIds);
       setThread(nextThread);
-      setPage("workspace");
+      setPage(workflow.workflow_id === "contract" ? "contract-workspace" : "complaint-workspace");
       const firstAssistant = nextThread.messages.find((message) => message.role === "assistant");
       setActiveCitation(firstAssistant?.citations[0] ?? firstAssistant?.report?.citations[0] ?? null);
-      void loadAuthorities(workflow.doc_id);
+      void loadAuthorities(workflow.doc_id, workflow.workflow_id);
     } catch (err) {
-      setError(parseError(err, "Analysis failed. Fixture mode only supports the bundled demo complaint."));
+      setError(parseError(err, "Analysis failed. Fixture mode only supports bundled demo documents."));
     } finally {
       setRunning(false);
     }
@@ -154,11 +175,12 @@ export default function App() {
     }
   }
 
-  async function loadAuthorities(docId: string) {
+  async function loadAuthorities(docId: string, workflowId: string) {
     setLoadingAuthorities(true);
     setAuthoritiesError(null);
     try {
-      const response = await getComplaintAuthorities(docId, "Matters Like This");
+      const finding = workflowId === "contract" ? "Antitrust Implications" : "Matters Like This";
+      const response = await getWorkflowAuthorities(docId, workflowId, finding);
       setAuthorities(response.authorities);
     } catch (err) {
       setAuthoritiesError(parseError(err, "Legal authorities could not be loaded."));
@@ -168,7 +190,12 @@ export default function App() {
   }
 
   function reset() {
-    setPage("entry");
+    setPage("launcher");
+    clearComplaintState();
+    setSelectedWorkflowId(null);
+  }
+
+  function clearComplaintState() {
     setWorkflow(null);
     setSelectedTaskIds([]);
     setSelectedPartyIds([]);
@@ -183,16 +210,23 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <span>Citation-Grounded RAG</span>
-        <span className="app-header__mode">Analyze a Complaint</span>
+        <span className="app-header__mode">{headerMode(page)}</span>
       </header>
-      {page === "entry" || !workflow ? (
+      {page === "launcher" ? (
+        <WorkflowLauncher workflows={WORKFLOWS} onSelectWorkflow={handleWorkflowSelect} />
+      ) : page === "complaint-entry" || page === "contract-entry" || !workflow ? (
         <ComplaintEntry
+          workflowLabel={selectedWorkflowId === "contract" ? "Analyze a Contract" : "Analyze a Complaint"}
+          title={selectedWorkflowId === "contract" ? "Start with a contract document" : "Start with a complaint document"}
+          demoActionLabel={selectedWorkflowId === "contract" ? "Use demo contract" : "Use demo complaint"}
+          demoDocumentName={selectedWorkflowId === "contract" ? "LinkedIn Merger Agreement.docx" : "musk-v-altman-openai-complaint-sf.pdf"}
           loading={loadingDocument}
           error={error}
           onUseDemo={handleUseDemo}
           onUpload={handleUpload}
+          onBackToWorkflows={reset}
         />
-      ) : page === "setup" || !thread ? (
+      ) : page === "complaint-setup" || page === "contract-setup" || !thread ? (
         <ComplaintSetup
           workflow={workflow}
           selectedTaskIds={selectedTaskIds}
@@ -203,6 +237,7 @@ export default function App() {
           onToggleParty={toggleParty}
           onRun={handleRunAnalysis}
           onReset={reset}
+          onBackToWorkflows={reset}
         />
       ) : (
         <ComplaintChatWorkspace
@@ -215,12 +250,19 @@ export default function App() {
           error={error}
           authoritiesError={authoritiesError}
           onCitationSelect={setActiveCitation}
-          onBackToSetup={() => setPage("setup")}
+          onBackToSetup={() => setPage(workflow.workflow_id === "contract" ? "contract-setup" : "complaint-setup")}
+          onBackToWorkflows={reset}
           onSendMessage={handleSendMessage}
         />
       )}
     </div>
   );
+}
+
+function headerMode(page: AppPage): string {
+  if (page.startsWith("contract")) return "Analyze a Contract";
+  if (page.startsWith("complaint")) return "Analyze a Complaint";
+  return "Workflows";
 }
 
 function parseError(err: unknown, fallback: string): string {

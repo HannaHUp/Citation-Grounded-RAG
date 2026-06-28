@@ -5,6 +5,7 @@ from typing import Protocol
 
 from fastapi import HTTPException
 
+from backend.fixtures import linkedin_merger_contract as contract_fixture
 from backend.fixtures import musk_v_altman_complaint as musk_fixture
 from backend.models import AnalysisReport, ChatMessage, ComplaintWorkflowResponse, DocStore, ReportCitation
 from backend.services.chunker import chunk_text
@@ -14,6 +15,7 @@ from backend.store import doc_store
 
 class DocumentWorkflowProvider(Protocol):
     def load_demo_complaint(self) -> ComplaintWorkflowResponse: ...
+    def load_demo_contract(self) -> ComplaintWorkflowResponse: ...
     def workflow_for(self, doc: DocStore) -> ComplaintWorkflowResponse: ...
 
 
@@ -60,12 +62,30 @@ class FixtureComplaintProvider(
             page_spans=extracted.page_spans,
             document_name=musk_fixture.DOCUMENT_NAME,
             fixture_id=musk_fixture.FIXTURE_ID,
+            detected_doc_type="complaint",
         )
         return musk_fixture.workflow_response(doc_store[doc_id])
+
+    def load_demo_contract(self) -> ComplaintWorkflowResponse:
+        doc_id = f"demo-{contract_fixture.FIXTURE_ID}"
+        doc_store[doc_id] = DocStore(
+            doc_id=doc_id,
+            full_text=contract_fixture.DEMO_TEXT,
+            chunks=chunk_text(doc_id, contract_fixture.DEMO_TEXT),
+            page_spans=contract_fixture.demo_page_spans(),
+            document_name=contract_fixture.DOCUMENT_NAME,
+            fixture_id=contract_fixture.FIXTURE_ID,
+            detected_doc_type="contract",
+        )
+        return contract_fixture.workflow_response(doc_store[doc_id])
 
     def workflow_for(self, doc: DocStore) -> ComplaintWorkflowResponse:
         if doc.fixture_id == musk_fixture.FIXTURE_ID:
             return musk_fixture.workflow_response(doc)
+        if doc.fixture_id == contract_fixture.FIXTURE_ID:
+            return contract_fixture.workflow_response(doc)
+        if doc.detected_doc_type == "contract":
+            return contract_fixture.limited_workflow_response(doc)
         return musk_fixture.limited_workflow_response(doc)
 
     def run_report(
@@ -74,27 +94,35 @@ class FixtureComplaintProvider(
         task_ids: list[str],
         represented_party_ids: list[str],
     ) -> AnalysisReport:
+        if doc.fixture_id == contract_fixture.FIXTURE_ID:
+            return contract_fixture.report_for(doc, task_ids, represented_party_ids)
         if doc.fixture_id != musk_fixture.FIXTURE_ID:
             raise HTTPException(
                 status_code=409,
-                detail="Rich Vincent-style complaint analysis for arbitrary documents requires LLM mode.",
+                detail=f"Rich Vincent-style {doc.detected_doc_type or 'document'} analysis for arbitrary documents requires LLM mode.",
             )
         return musk_fixture.report_for(doc, task_ids, represented_party_ids)
 
     def resolve(self, doc: DocStore, citation_id: str) -> ReportCitation | None:
-        if doc.fixture_id != musk_fixture.FIXTURE_ID:
-            return None
-        return musk_fixture.citation_for(doc, citation_id)
+        if doc.fixture_id == contract_fixture.FIXTURE_ID:
+            return contract_fixture.citation_for(doc, citation_id)
+        if doc.fixture_id == musk_fixture.FIXTURE_ID:
+            return musk_fixture.citation_for(doc, citation_id)
+        return None
 
     def answer_follow_up(self, doc: DocStore, message: str) -> ChatMessage:
+        if doc.fixture_id == contract_fixture.FIXTURE_ID:
+            return contract_fixture.follow_up_answer(doc, message)
         if doc.fixture_id != musk_fixture.FIXTURE_ID:
             raise HTTPException(
                 status_code=409,
-                detail="Rich Vincent-style complaint chat for arbitrary documents requires LLM mode.",
+                detail=f"Rich Vincent-style {doc.detected_doc_type or 'document'} chat for arbitrary documents requires LLM mode.",
             )
         return musk_fixture.follow_up_answer(doc, message)
 
     def fixture_authorities(self, doc: DocStore, finding: str | None = None) -> list[dict] | None:
+        if doc.fixture_id == contract_fixture.FIXTURE_ID:
+            return contract_fixture.authorities(finding)
         if doc.fixture_id != musk_fixture.FIXTURE_ID:
             return None
         if finding and "matter" in finding.lower():
