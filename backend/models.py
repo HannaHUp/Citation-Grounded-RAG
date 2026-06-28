@@ -24,6 +24,8 @@ class DocStore:
     full_text: str    # canonical source of truth; never mutated after creation
     chunks: list[Chunk]
     page_spans: list[PageSpan] = field(default_factory=list)
+    document_name: str | None = None
+    fixture_id: str | None = None
 
 @dataclass
 class RawFinding:
@@ -55,7 +57,7 @@ class AnalysisProfile:
 class LegalAuthority:
     authority_id: str
     title: str
-    source_type: str  # "case" | "statute" | "secondary"
+    source_type: str  # "case" | "statute" | "secondary" | "similar_case"
     summary: str
     relevance: int
     quote: str
@@ -72,6 +74,94 @@ class AuthorityRecord:
     url: str
     source_text: str
     metadata: dict
+
+@dataclass
+class ExtractedParty:
+    id: str
+    name: str
+    role: str
+    type: str
+    selected_by_default: bool = False
+
+@dataclass
+class WorkflowTask:
+    id: str
+    title: str
+    description: str
+    category: str
+    enabled: bool
+    fixture_supported: bool
+
+@dataclass
+class ComplaintWorkflowResponse:
+    doc_id: str
+    document_name: str
+    full_text: str
+    workflow_id: str
+    detected_doc_type: str
+    detected_summary: str
+    fixture_available: bool
+    tasks: list[WorkflowTask]
+    parties: list[ExtractedParty]
+
+@dataclass
+class ReportCitation:
+    id: str
+    label: str
+    source_doc_name: str
+    page: int
+    quote: str
+    abs_start: int | None
+    abs_end: int | None
+
+@dataclass
+class ReportBlock:
+    type: str
+    text: str | None = None
+    items: list[str] = field(default_factory=list)
+    citation_ids: list[str] = field(default_factory=list)
+    table_id: str | None = None
+
+@dataclass
+class ReportSection:
+    id: str
+    heading: str
+    blocks: list[ReportBlock]
+
+@dataclass
+class ReportTable:
+    id: str
+    title: str
+    columns: list[str]
+    rows: list[dict]
+
+@dataclass
+class AnalysisReport:
+    id: str
+    title: str
+    subtitle: str
+    sections: list[ReportSection]
+    tables: list[ReportTable]
+    citations: list[ReportCitation]
+    primary_task_ids: list[str]
+    represented_party_ids: list[str]
+
+@dataclass
+class ChatMessage:
+    id: str
+    role: str
+    content: str
+    report: AnalysisReport | None
+    citations: list[ReportCitation]
+    created_at: str
+
+@dataclass
+class ChatThread:
+    thread_id: str
+    doc_id: str
+    selected_task_ids: list[str]
+    represented_party_ids: list[str]
+    messages: list[ChatMessage]
 
 FINDINGS_SCHEMA = {
     "type": "object",

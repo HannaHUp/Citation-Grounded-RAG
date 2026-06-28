@@ -1,304 +1,236 @@
 import { useState } from "react";
-import { uploadFile, analyze, getAuthorities } from "./api";
-import type {
-  LegalAuthority,
-  Perspective,
-  VerifiedFinding,
-  WorkflowId,
-  WorkflowStep,
-} from "./types";
 import {
-  getTaskByProfileId,
+  getComplaintAuthorities,
   getWorkflow,
-  WORKFLOWS,
-  type RunnableProfileId,
-} from "./workflows";
-import WorkflowOutput from "./components/WorkflowOutput";
-import TaskPicker from "./components/TaskPicker";
-import WorkflowPicker from "./components/WorkflowPicker";
-import WorkflowUploadStep from "./components/WorkflowUploadStep";
+  loadDemoComplaint,
+  sendChatMessage,
+  startChat,
+  uploadFile,
+} from "./api";
+import ComplaintChatWorkspace from "./components/ComplaintChatWorkspace";
+import ComplaintEntry from "./components/ComplaintEntry";
+import ComplaintSetup from "./components/ComplaintSetup";
+import type {
+  ChatMessage,
+  ChatThread,
+  ComplaintWorkflowResponse,
+  LegalAuthority,
+  ReportCitation,
+} from "./types";
 
-interface Highlight {
-  start: number;
-  end: number;
-}
-
-const DEFAULT_PROFILE_ID: RunnableProfileId = "contract_risk";
-const DEFAULT_PERSPECTIVE: Perspective = "neutral";
+type ComplaintPage = "entry" | "setup" | "workspace";
 
 export default function App() {
-  const [step, setStep] = useState<WorkflowStep>("workflow");
-  const [workflowId, setWorkflowId] = useState<WorkflowId | null>(null);
-  const [fullText, setFullText] = useState<string | null>(null);
-  const [docId, setDocId] = useState<string | null>(null);
-  const [detectedDocType, setDetectedDocType] = useState<"contract" | "complaint" | null>(null);
-  const [selectedProfileId, setSelectedProfileId] = useState<RunnableProfileId>(DEFAULT_PROFILE_ID);
-  const [perspective, setPerspective] = useState<Perspective>(DEFAULT_PERSPECTIVE);
-  const [findings, setFindings] = useState<VerifiedFinding[]>([]);
+  const [page, setPage] = useState<ComplaintPage>("entry");
+  const [workflow, setWorkflow] = useState<ComplaintWorkflowResponse | null>(null);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [selectedPartyIds, setSelectedPartyIds] = useState<string[]>([]);
+  const [thread, setThread] = useState<ChatThread | null>(null);
   const [authorities, setAuthorities] = useState<LegalAuthority[]>([]);
-  const [highlight, setHighlight] = useState<Highlight | null>(null);
-  const [activeFinding, setActiveFinding] = useState<VerifiedFinding | null>(null);
+  const [activeCitation, setActiveCitation] = useState<ReportCitation | null>(null);
 
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [loadingDocument, setLoadingDocument] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [loadingAuthorities, setLoadingAuthorities] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [authoritiesError, setAuthoritiesError] = useState<string | null>(null);
-  const [loadingAuthoritiesFor, setLoadingAuthoritiesFor] = useState<string | null>(null);
 
-  const workflow = workflowId === null ? null : getWorkflow(workflowId);
-  const selectedTask = getTaskByProfileId(selectedProfileId);
-
-  function handleWorkflowSelect(nextWorkflowId: WorkflowId) {
-    const nextWorkflow = getWorkflow(nextWorkflowId);
-    setWorkflowId(nextWorkflowId);
-    setSelectedProfileId(nextWorkflow.defaultProfileId);
-    setPerspective(DEFAULT_PERSPECTIVE);
-    setStep("upload");
-    clearDocumentState();
+  async function handleUseDemo() {
+    setLoadingDocument(true);
+    setError(null);
+    try {
+      const nextWorkflow = await loadDemoComplaint();
+      applyWorkflow(nextWorkflow);
+    } catch (err) {
+      setError(parseError(err, "Demo complaint could not be loaded."));
+    } finally {
+      setLoadingDocument(false);
+    }
   }
 
   async function handleUpload(file: File) {
-    setUploading(true);
-    setUploadError(null);
-    setDetectedDocType(null);
+    setLoadingDocument(true);
+    setError(null);
     try {
-      const res = await uploadFile(file);
-      const profileId = toRunnableProfileId(res.profile_id);
-      setDocId(res.doc_id);
-      setFullText(res.full_text);
-      setDetectedDocType(res.detected_doc_type);
-      setSelectedProfileId(profileId);
-      setFindings([]);
-      setAuthorities([]);
-      setHighlight(null);
-      setActiveFinding(null);
-      setAnalyzeError(null);
-      setStep("tasks");
+      const upload = await uploadFile(file);
+      const nextWorkflow = await getWorkflow(upload.doc_id);
+      applyWorkflow(nextWorkflow);
     } catch (err) {
-      setUploadError(parseUploadError(err));
+      setError(parseError(err, "Upload failed. Please use a PDF or DOCX under 20 MB."));
     } finally {
-      setUploading(false);
+      setLoadingDocument(false);
     }
   }
 
-  async function handleAnalyze() {
-    if (!docId || !workflow) return;
-    setAnalyzing(true);
-    setAnalyzeError(null);
-    setAuthoritiesError(null);
-    setFindings([]);
-    setAuthorities([]);
-    setHighlight(null);
-    setActiveFinding(null);
-    try {
-      const res = await analyze(
-        docId,
-        selectedProfileId,
-        workflow.requiresPerspective ? perspective : undefined,
-      );
-      setFindings(res.findings);
-      setStep("output");
-      // auto-select first verified finding (fallback first) so the right
-      // authority pane loads as soon as output opens
-      const initial =
-        res.findings.find((f) => f.verified) ?? res.findings[0] ?? null;
-      if (initial) {
-        if (initial.verified && initial.abs_start != null && initial.abs_end != null) {
-          setHighlight({ start: initial.abs_start, end: initial.abs_end });
-        }
-        void loadAuthorities(initial);
-      }
-    } catch (err) {
-      setAnalyzeError(parseAnalyzeError(err));
-    } finally {
-      setAnalyzing(false);
-    }
-  }
-
-  function handleProfileSelect(profileId: RunnableProfileId) {
-    setSelectedProfileId(profileId);
-    setFindings([]);
-    setAuthorities([]);
-    setHighlight(null);
-    setActiveFinding(null);
-    setAnalyzeError(null);
-    setAuthoritiesError(null);
-  }
-
-  function handleFindingClick(f: VerifiedFinding) {
-    if (f.verified && f.abs_start != null && f.abs_end != null) {
-      setHighlight({ start: f.abs_start, end: f.abs_end });
-    }
-    // selecting any finding refreshes the right authority pane for it
-    void loadAuthorities(f);
-  }
-
-  async function loadAuthorities(finding: VerifiedFinding) {
-    if (!docId) return;
-    setLoadingAuthoritiesFor(finding.source_chunk_id);
-    setAuthoritiesError(null);
-    setActiveFinding(finding);
-    setAuthorities([]);
-    try {
-      const res = await getAuthorities(docId, selectedProfileId, finding);
-      setAuthorities(res.authorities);
-    } catch (err) {
-      setAuthoritiesError(parseAnalyzeError(err));
-    } finally {
-      setLoadingAuthoritiesFor(null);
-    }
-  }
-
-  function clearDocumentState() {
-    setFullText(null);
-    setDocId(null);
-    setDetectedDocType(null);
-    setFindings([]);
-    setAuthorities([]);
-    setHighlight(null);
-    setActiveFinding(null);
-    setUploadError(null);
-    setAnalyzeError(null);
-    setAuthoritiesError(null);
-    setLoadingAuthoritiesFor(null);
-  }
-
-  function renderStep() {
-    if (step === "workflow" || workflow === null) {
-      return (
-        <WorkflowPicker
-          workflows={WORKFLOWS}
-          onSelectWorkflow={handleWorkflowSelect}
-        />
-      );
-    }
-
-    if (step === "upload") {
-      return (
-        <WorkflowUploadStep
-          workflow={workflow}
-          uploading={uploading}
-          error={uploadError}
-          onUpload={handleUpload}
-          onBack={() => {
-            setWorkflowId(null);
-            setStep("workflow");
-          }}
-        />
-      );
-    }
-
-    if (step === "tasks") {
-      return (
-        <TaskPicker
-          workflow={workflow}
-          detectedDocType={detectedDocType}
-          selectedProfileId={selectedProfileId}
-          perspective={perspective}
-          analyzing={analyzing}
-          analyzeError={analyzeError}
-          onSelectProfile={handleProfileSelect}
-          onSelectPerspective={setPerspective}
-          onRunTask={handleAnalyze}
-          onBack={() => setStep("upload")}
-        />
-      );
-    }
-
-    if (fullText === null) {
-      return (
-        <WorkflowUploadStep
-          workflow={workflow}
-          uploading={uploading}
-          error={uploadError}
-          onUpload={handleUpload}
-          onBack={() => setStep("workflow")}
-        />
-      );
-    }
-
-    return (
-      <>
-        <div className="output-toolbar">
-          <button type="button" className="btn-secondary" onClick={() => setStep("tasks")}>
-            Back to tasks
-          </button>
-          <span>{workflow.title}</span>
-          <span>Task: <strong>{selectedTask.title}</strong></span>
-          {detectedDocType !== null && (
-            <span>Detected: <strong>{detectedDocType === "contract" ? "Contract" : "Complaint"}</strong></span>
-          )}
-          {workflow.requiresPerspective && (
-            <span>Perspective: <strong>{capitalize(perspective)}</strong></span>
-          )}
-        </div>
-        {analyzeError && <p className="error-msg">{analyzeError}</p>}
-        <WorkflowOutput
-          fullText={fullText}
-          findings={findings}
-          authorities={authorities}
-          activeFinding={activeFinding}
-          highlight={highlight}
-          loadingAuthorities={loadingAuthoritiesFor !== null}
-          authoritiesError={authoritiesError}
-          onFindingClick={handleFindingClick}
-        />
-      </>
+  function applyWorkflow(nextWorkflow: ComplaintWorkflowResponse) {
+    setWorkflow(nextWorkflow);
+    setPage("setup");
+    setSelectedTaskIds(
+      nextWorkflow.tasks
+        .filter((task) => task.enabled && task.fixture_supported)
+        .slice(0, 3)
+        .map((task) => task.id),
     );
+    setSelectedPartyIds(
+      nextWorkflow.parties
+        .filter((party) => party.selected_by_default)
+        .map((party) => party.id),
+    );
+    setThread(null);
+    setAuthorities([]);
+    setActiveCitation(null);
+    setAuthoritiesError(null);
+  }
+
+  function toggleTask(taskId: string) {
+    setSelectedTaskIds((current) =>
+      current.includes(taskId)
+        ? current.filter((id) => id !== taskId)
+        : [...current, taskId],
+    );
+    setThread(null);
+    setActiveCitation(null);
+  }
+
+  function toggleParty(partyId: string) {
+    setSelectedPartyIds((current) =>
+      current.includes(partyId)
+        ? current.filter((id) => id !== partyId)
+        : [...current, partyId],
+    );
+    setThread(null);
+    setActiveCitation(null);
+  }
+
+  async function handleRunAnalysis() {
+    if (!workflow) return;
+    setRunning(true);
+    setError(null);
+    setAuthoritiesError(null);
+    try {
+      const nextThread = await startChat(workflow.doc_id, selectedTaskIds, selectedPartyIds);
+      setThread(nextThread);
+      setPage("workspace");
+      const firstAssistant = nextThread.messages.find((message) => message.role === "assistant");
+      setActiveCitation(firstAssistant?.citations[0] ?? firstAssistant?.report?.citations[0] ?? null);
+      void loadAuthorities(workflow.doc_id);
+    } catch (err) {
+      setError(parseError(err, "Analysis failed. Fixture mode only supports the bundled demo complaint."));
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function handleSendMessage(message: string) {
+    if (!thread) return;
+    setSending(true);
+    setError(null);
+    const userMessage: ChatMessage = {
+      id: `client-${Date.now()}`,
+      role: "user",
+      content: message,
+      report: null,
+      citations: [],
+      created_at: new Date().toISOString(),
+    };
+    try {
+      const assistantMessage = await sendChatMessage(thread.thread_id, message);
+      setThread((current) =>
+        current
+          ? { ...current, messages: [...current.messages, userMessage, assistantMessage] }
+          : current,
+      );
+      setActiveCitation(assistantMessage.citations[0] ?? activeCitation);
+    } catch (err) {
+      setThread((current) =>
+        current
+          ? { ...current, messages: [...current.messages, userMessage] }
+          : current,
+      );
+      setError(parseError(err, "Follow-up failed. Fixture mode supports only bundled demo chat examples."));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function loadAuthorities(docId: string) {
+    setLoadingAuthorities(true);
+    setAuthoritiesError(null);
+    try {
+      const response = await getComplaintAuthorities(docId, "Matters Like This");
+      setAuthorities(response.authorities);
+    } catch (err) {
+      setAuthoritiesError(parseError(err, "Legal authorities could not be loaded."));
+    } finally {
+      setLoadingAuthorities(false);
+    }
+  }
+
+  function reset() {
+    setPage("entry");
+    setWorkflow(null);
+    setSelectedTaskIds([]);
+    setSelectedPartyIds([]);
+    setThread(null);
+    setAuthorities([]);
+    setActiveCitation(null);
+    setError(null);
+    setAuthoritiesError(null);
   }
 
   return (
     <div className="app">
       <header className="app-header">
         <span>Citation-Grounded RAG</span>
-        <WorkflowProgress step={step} />
+        <span className="app-header__mode">Analyze a Complaint</span>
       </header>
-      {renderStep()}
+      {page === "entry" || !workflow ? (
+        <ComplaintEntry
+          loading={loadingDocument}
+          error={error}
+          onUseDemo={handleUseDemo}
+          onUpload={handleUpload}
+        />
+      ) : page === "setup" || !thread ? (
+        <ComplaintSetup
+          workflow={workflow}
+          selectedTaskIds={selectedTaskIds}
+          selectedPartyIds={selectedPartyIds}
+          running={running}
+          error={error}
+          onToggleTask={toggleTask}
+          onToggleParty={toggleParty}
+          onRun={handleRunAnalysis}
+          onReset={reset}
+        />
+      ) : (
+        <ComplaintChatWorkspace
+          workflow={workflow}
+          thread={thread}
+          authorities={authorities}
+          activeCitation={activeCitation}
+          loadingAuthorities={loadingAuthorities}
+          sending={sending}
+          error={error}
+          authoritiesError={authoritiesError}
+          onCitationSelect={setActiveCitation}
+          onBackToSetup={() => setPage("setup")}
+          onSendMessage={handleSendMessage}
+        />
+      )}
     </div>
   );
 }
 
-function parseUploadError(err: unknown): string {
-  const raw = err instanceof Error ? err.message : String(err);
-  if (/413|too large/i.test(raw)) return "File too large. Maximum size is 20 MB.";
-  if (/400|unsupported|type/i.test(raw)) return "Unsupported file type. Please upload a PDF or DOCX.";
-  return "Upload failed. Check your connection and try again.";
-}
-
-function parseAnalyzeError(err: unknown): string {
-  const raw = err instanceof Error ? err.message : String(err);
-  if (/404|not found/i.test(raw)) return "Session expired. Please re-upload your document.";
-  return "Analysis failed. Try again or upload a different document.";
-}
-
-function toRunnableProfileId(profileId: string): RunnableProfileId {
-  return profileId === "complaint_claims" ? "complaint_claims" : "contract_risk";
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function WorkflowProgress({ step }: { step: WorkflowStep }) {
-  const items: Array<{ id: WorkflowStep; label: string }> = [
-    { id: "workflow", label: "Workflow" },
-    { id: "upload", label: "Upload" },
-    { id: "tasks", label: "Tasks" },
-    { id: "output", label: "Output" },
-  ];
-  const activeIndex = items.findIndex((item) => item.id === step);
-
-  return (
-    <nav className="workflow-progress" aria-label="Workflow progress">
-      {items.map((item, index) => (
-        <span
-          key={item.id}
-          className={`workflow-progress__item${index <= activeIndex ? " workflow-progress__item--active" : ""}`}
-        >
-          {item.label}
-        </span>
-      ))}
-    </nav>
-  );
+function parseError(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) {
+    try {
+      const parsed = JSON.parse(err.message);
+      if (typeof parsed.detail === "string") return parsed.detail;
+    } catch {
+      return err.message;
+    }
+  }
+  return fallback;
 }

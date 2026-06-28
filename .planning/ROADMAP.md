@@ -96,7 +96,19 @@ Plans:
   3. Selecting Plaintiff/Defendant/Neutral changes the framing of the generated findings (the choice reaches the LLM prompt)
   4. Each finding displays the correct source page number alongside the ✓/⚠ badge
   5. The output is the two-pane layout (findings left, Legal Authorities right) with the polished card/badge/severity design from `.planning/sketches/vincent-flow.html`
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+**Wave 1**
+- [x] 04-01-PLAN.md - Backend page citation foundation: extractor page spans + VerifiedFinding.source_page
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 04-02-PLAN.md - Backend perspective contract: Plaintiff/Defendant/Neutral reaches /analyze prompt without profile branches
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 04-03-PLAN.md - Frontend workflow shell: workflow picker -> upload -> task picker + complaint perspective selector
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [x] 04-04-PLAN.md - Vincent-style output: page-cited findings left, Legal Authorities right, authority preflight + human verify
 **UI hint**: yes
 **Design reference**: `.planning/sketches/vincent-flow.html` (validated 2026-06-26)
 
@@ -107,4 +119,4 @@ Plans:
 | 1. Grounding Spine | 3/3 | Complete    | 2026-06-26 |
 | 2. Second Profile + Auto-Detect | 2/2 | Complete    | 2026-06-26 |
 | 3. Legal Authorities RAG Panel | 2/3 | Human verification needed | - |
-| 4. Vincent-Style Workflow Shell | 0/TBD | Not started | - |
+| 4. Vincent-Style Workflow Shell | 4/4 | Human verification needed | - |
