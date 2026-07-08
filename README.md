@@ -53,6 +53,7 @@ The app is a legal-document review demo. A user starts with one of two workflows
   allegations, parties, and legal issues.
 
   ![alt text](image-1.png)
+  ![alt text](image-2.png)
 - **Analyze a Contract**: review a contract and surface risks, obligations, and
   business/legal issues.
 ![alt text](image.png)
