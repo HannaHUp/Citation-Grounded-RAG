@@ -19,6 +19,9 @@ shows how to design an AI feature around trust, citations, and human review.
 
 ## Demo Video
 
+The animation below is a short preview of the demo. Click it to open the full
+1 minute 33 second MP4 recording.
+
 [![Demo video preview](assets/demo-preview.gif)](assets/demo.mp4)
 
 In the demo, I walk through the two supported workflows: complaint analysis and
