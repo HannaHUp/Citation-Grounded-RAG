@@ -19,13 +19,11 @@ shows how to design an AI feature around trust, citations, and human review.
 
 ## Demo Video
 
-Add the demo recording at:
+<video src="assets/demo.mp4" controls width="100%">
+  Your browser does not support embedded videos. You can download the demo video from `assets/demo.mp4`.
+</video>
 
-```text
-assets/demo.mp4
-```
-
-[Watch the demo video](assets/demo.mp4)
+[Download the demo video](assets/demo.mp4)
 
 In the demo, I walk through the two supported workflows: complaint analysis and
 contract analysis. The key feature is citation-grounded reasoning: the LLM
