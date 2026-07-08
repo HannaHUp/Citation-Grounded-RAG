@@ -51,9 +51,11 @@ The app is a legal-document review demo. A user starts with one of two workflows
 
 - **Analyze a Complaint**: review a litigation complaint and surface claims,
   allegations, parties, and legal issues.
+
+  ![alt text](image-1.png)
 - **Analyze a Contract**: review a contract and surface risks, obligations, and
   business/legal issues.
-
+![alt text](image.png)
 After the user chooses a workflow, the app loads or uploads a document, runs an
 analysis, and shows a review workspace. The workspace is designed around one
 question:
