@@ -343,12 +343,22 @@ npm run lint
 
 ## What I Would Improve Next
 
-- Replace the local authority corpus with a larger legal corpus and stronger
-  retrieval.
-- Add persistence for uploaded documents and analysis sessions.
-- Add fuzzy quote matching for harmless formatting differences while preserving
-  strict verification rules.
-- Improve PDF layout handling for multi-column or scanned documents.
-- Add evals that measure quote-match rate, unverified rate, and retrieval quality.
+- **Scale document analysis**: move beyond the MVP "send all chunks" approach.
+  Use top-k retrieval for targeted questions and map-reduce / section analysis
+  for complete document review.
+- **Improve Legal Authorities retrieval**: replace the small local JSONL corpus
+  with a larger legal corpus and stronger retrieval, such as BM25, embeddings,
+  pgvector, or a search index depending on scale.
+- **Keep deterministic verification**: preserve the verifier as the trust
+  boundary even if the retrieval or analysis pipeline changes.
+- **Add persistence**: store uploaded documents, extracted text, analysis runs,
+  citations, and chat sessions outside process memory.
+- **Add legal AI evals**: measure quote-match rate, unverified rate, retrieval
+  quality, citation coverage, and missed-issue rate.
+- **Improve document parsing**: handle multi-column PDFs, scanned documents/OCR,
+  tables, exhibits, and DOCX pagination more accurately.
+- **Add safer quote matching**: support fuzzy/normalized matching for harmless
+  formatting differences while still clearly distinguishing exact verification
+  from approximate support.
 
 See `ARCHITECTURE.md` for the full system explanation and implementation details.
